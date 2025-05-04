@@ -1,5 +1,6 @@
+import '../maison/list.dart'; 
 import 'package:flutter/material.dart';
-import '../maison/list.dart'; // vérifie que ce fichier existe bien et contient HomePage
+ // Assurez-vous que ce fichier contient bien HomePage
 
 final Map<String, WidgetBuilder> maisonRoutes = {
   '/home': (context) => const HomePage(),

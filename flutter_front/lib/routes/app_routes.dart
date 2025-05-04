@@ -2,6 +2,10 @@
 import 'package:flutter/material.dart';
 import 'authentification.dart';
 import 'maison.dart';
+import '../maison/list.dart';   
+final Map<String, WidgetBuilder> maisonRoutes = {
+  '/home': (context) => const HomePage(),
+};
 
 class AppRoutes {
   static const String login = '/login';
@@ -10,7 +14,8 @@ class AppRoutes {
   static const String home = '/home';
 
   static final routes = <String, WidgetBuilder>{
-    ...authRoutes,
-    ...maisonRoutes,
+    ...authRoutes,  // Routes pour l'authentification
+    ...maisonRoutes,  // Routes pour la maison
   };
 }
+
