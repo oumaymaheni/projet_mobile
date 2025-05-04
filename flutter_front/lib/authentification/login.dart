@@ -13,11 +13,13 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
-  
+
   // Définition des couleurs thématiques
-  final Color primaryBlue = const Color(0xFF1E88E5); // Bleu principal
-  final Color accentOrange = const Color(0xFFFF9800); // Orange accent
-  final Color lightBlue = const Color(0xFFBBDEFB); // Bleu clair pour fond
+  final Color primaryBlue = const Color(0xFF2979FF); // Bleu principal
+  final Color secondaryBlue = const Color(0xFF75A7FF); // Bleu secondaire
+  final Color backgroundWhite = Colors.white; // Fond blanc
+  final Color textGrey = const Color(0xFF757575); // Gris pour texte
+  final Color lightGrey = const Color(0xFFEEEEEE); // Gris clair
 
   @override
   void dispose() {
@@ -28,12 +30,13 @@ class _LoginPageState extends State<LoginPage> {
 
   void _login() {
     if (_formKey.currentState!.validate()) {
-      // Implémentez ici votre logique de connexion
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Connexion en cours...')),
+        SnackBar(
+          content: const Text('Connexion en cours...'),
+          backgroundColor: primaryBlue,
+        ),
       );
-      
-      // Simuler une connexion réussie après un court délai
+
       Future.delayed(const Duration(seconds: 2), () {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -49,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightBlue.withOpacity(0.3), // Fond bleu très clair
+      backgroundColor: backgroundWhite,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -60,27 +63,18 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo ou Image avec gradient bleu-orange
-                  Container(
+                  Image.asset(
+                    'assets/images/landing_page.png',
                     width: 100,
                     height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [primaryBlue, accentOrange],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.lock_outlined,
-                      size: 50,
-                      color: Colors.white,
-                    ),
                   ),
-                  const SizedBox(height: 32),
-                  
-                  // Titre avec couleur bleue
+                  const SizedBox(height: 16),
+                  const Text(
+                    "My Home",
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'Bienvenue',
                     style: TextStyle(
@@ -95,18 +89,17 @@ class _LoginPageState extends State<LoginPage> {
                     'Connectez-vous à votre compte',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey[600],
+                      color: textGrey,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
-                  
-                  // Champ Email
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
                       hintText: 'Email',
+                      hintStyle: TextStyle(color: textGrey),
                       prefixIcon: Icon(Icons.email_outlined, color: primaryBlue),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -114,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderSide: BorderSide(color: lightGrey),
                       ),
                       errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -125,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderSide: const BorderSide(color: Colors.red, width: 2),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: backgroundWhite,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -137,13 +130,12 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Champ Mot de passe
                   TextFormField(
                     controller: _passwordController,
                     obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       hintText: 'Mot de passe',
+                      hintStyle: TextStyle(color: textGrey),
                       prefixIcon: Icon(Icons.lock_outline, color: primaryBlue),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -162,7 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                        borderSide: BorderSide(color: lightGrey),
                       ),
                       errorBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -173,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderSide: const BorderSide(color: Colors.red, width: 2),
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: backgroundWhite,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -185,8 +177,6 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Options
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -206,23 +196,21 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text('Se souvenir de moi'),
+                          Text('Se souvenir de moi', style: TextStyle(color: textGrey)),
                         ],
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/forget-password');
+                          // Action récupération mot de passe
                         },
                         style: TextButton.styleFrom(
-                          foregroundColor: accentOrange,
+                          foregroundColor: secondaryBlue,
                         ),
                         child: const Text('Mot de passe oublié?'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
-                  // Bouton de connexion avec dégradé bleu-orange
                   ElevatedButton(
                     onPressed: _login,
                     style: ElevatedButton.styleFrom(
@@ -237,48 +225,42 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Autres options de connexion
+                  const SizedBox(height: 24),
                   Row(
                     children: [
-                      Expanded(child: Divider(color: Colors.grey[400])),
+                      Expanded(child: Divider(color: lightGrey)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
                           'Ou connectez-vous avec',
-                          style: TextStyle(color: Colors.grey[600]),
+                          style: TextStyle(color: textGrey),
                         ),
                       ),
-                      Expanded(child: Divider(color: Colors.grey[400])),
+                      Expanded(child: Divider(color: lightGrey)),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  
-                  // Boutons de médias sociaux
+                  const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _socialButton(Icons.facebook, primaryBlue),
                       const SizedBox(width: 16),
-                      _socialButton(Icons.g_mobiledata, accentOrange),
+                      _socialButton(Icons.g_mobiledata, textGrey),
                       const SizedBox(width: 16),
                       _socialButton(Icons.apple, Colors.black),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  
-                  // Lien d'inscription avec couleur orange
+                  const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Vous n'avez pas de compte?"),
+                      Text("Vous n'avez pas de compte?", style: TextStyle(color: textGrey)),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/register');
+                          // Action d'inscription
                         },
                         style: TextButton.styleFrom(
-                          foregroundColor: accentOrange,
+                          foregroundColor: primaryBlue,
                         ),
                         child: const Text(
                           "S'inscrire",
@@ -299,21 +281,22 @@ class _LoginPageState extends State<LoginPage> {
   Widget _socialButton(IconData icon, Color color) {
     return InkWell(
       onTap: () {
-        // Implémentez la connexion avec le réseau social
+        // Connexion sociale
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 60,
-        height: 60,
+        width: 80,
+        height: 70,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: backgroundWhite,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: lightGrey),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
+              color: Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
             ),
           ],
         ),

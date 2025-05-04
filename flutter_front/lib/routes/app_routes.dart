@@ -1,21 +1,20 @@
-// routes/app_routes.dart
+// lib/routes/app_routes.dart
 import 'package:flutter/material.dart';
 import 'authentification.dart';
 import 'maison.dart';
-import '../maison/list.dart';   
-final Map<String, WidgetBuilder> maisonRoutes = {
-  '/home': (context) => const HomePage(),
-};
+import 'user.dart'; // <--- Ajout
+
 
 class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgot = '/forgot';
   static const String home = '/home';
+  static const String userProfile = '/userProfile';
 
   static final routes = <String, WidgetBuilder>{
-    ...authRoutes,  // Routes pour l'authentification
-    ...maisonRoutes,  // Routes pour la maison
+    ...authRoutes,
+    ...maisonRoutes,
+    ...userRoutes, 
   };
 }
-
