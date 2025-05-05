@@ -22,8 +22,6 @@ class DefaultFirebaseOptions {
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
-      case TargetPlatform.iOS:
-        return ios;
       case TargetPlatform.macOS:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for macos - '
@@ -47,27 +45,21 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyALV4rn3sgQp5l9JIcj6TP0Nmls9I0nLLk',
-    appId: '1:345257484842:web:871a03ea3a7833d8295953',
-    messagingSenderId: '345257484842',
-    projectId: 'projetflutter-61e04',
-    storageBucket: 'projetflutter-61e04.firebasestorage.app',
+    apiKey: 'AIzaSyByIX2WrbAdRJWk6dgo1HpimjSJLs7ZtwQ',
+    appId: '1:981090340587:web:e0e88916e0cf76596fb8ae',
+    messagingSenderId: '981090340587',
+    projectId: 'data-2d700',
+    storageBucket: 'data-2d700.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyALV4rn3sgQp5l9JIcj6TP0Nmls9I0nLLk',
-    appId: '1:345257484842:android:abcd1234efgh5678',
-    messagingSenderId: '345257484842',
-    projectId: 'projetflutter-61e04',
-    storageBucket: 'projetflutter-61e04.appspot.com',
+    apiKey: 'AIzaSyAKwXF6i0UHxRHxoF-7ho2mi88b-3yzWfo',
+    appId: '1:981090340587:android:02cd0afde25feb726fb8ae',
+    messagingSenderId: '981090340587',
+    projectId: 'data-2d700',
+    storageBucket: 'gs://data-2d700.firebasestorage.app',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyALV4rn3sgQp5l9JIcj6TP0Nmls9I0nLLk',
-    appId: '1:345257484842:ios:ijkl7890mnop1234',
-    messagingSenderId: '345257484842',
-    projectId: 'projetflutter-61e04',
-    storageBucket: 'projetflutter-61e04.appspot.com',
-  );
+  
 }
 

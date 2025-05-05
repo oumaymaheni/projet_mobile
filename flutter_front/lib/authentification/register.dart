@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -31,38 +32,61 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void _register() {
-    if (_formKey.currentState!.validate() && _acceptTerms) {
-      // Implémentez ici votre logique d'inscription
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inscription en cours...')),
+ void _register() async {
+  if (_formKey.currentState!.validate() && _acceptTerms) {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      // Affiche un indicateur de chargement
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
       );
-      
-      // Simuler une inscription réussie après un court délai
-      Future.delayed(const Duration(seconds: 2), () {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Inscription réussie!'),
-            backgroundColor: primaryBlue,
-          ),
-        );
-        
-        // Retourner à la page de connexion après inscription
-        Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pop(context);
-        });
-      });
-    } else if (!_acceptTerms) {
+
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      Navigator.of(context).pop(); // Ferme le CircularProgressIndicator
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Veuillez accepter les conditions d\'utilisation.'),
-          backgroundColor: Colors.red,
+          content: const Text('Inscription réussie!'),
+          backgroundColor: primaryBlue,
         ),
       );
-    }
-  }
 
+      Future.delayed(const Duration(seconds: 1), () {
+        Navigator.pop(context); // Revenir à la page de connexion
+      });
+    } on FirebaseAuthException catch (e) {
+      Navigator.of(context).pop(); // Ferme le CircularProgressIndicator
+
+      String message = 'Une erreur est survenue.';
+      if (e.code == 'email-already-in-use') {
+        message = 'Cet email est déjà utilisé.';
+      } else if (e.code == 'weak-password') {
+        message = 'Le mot de passe est trop faible.';
+      } else if (e.code == 'invalid-email') {
+        message = 'Adresse email invalide.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+    }
+  } else if (!_acceptTerms) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Veuillez accepter les conditions d\'utilisation.'),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(

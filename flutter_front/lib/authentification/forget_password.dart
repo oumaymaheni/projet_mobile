@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ForgetPasswordPage extends StatefulWidget {
   const ForgetPasswordPage({Key? key}) : super(key: key);
@@ -12,11 +13,12 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isSendingLink = false;
   bool _linkSent = false;
+  String? _errorMessage;
 
-  // Définition des couleurs thématiques - harmonisées avec RegisterPage
-  final Color primaryBlue = const Color(0xFF1E88E5); // Même bleu que RegisterPage
-  final Color accentOrange = const Color(0xFFFF9800); // Même orange que RegisterPage
-  final Color lightBlue = const Color(0xFFBBDEFB); // Même bleu clair que RegisterPage
+  // Couleurs thématiques
+  final Color primaryBlue = const Color(0xFF1E88E5);
+  final Color accentOrange = const Color(0xFFFF9800);
+  final Color lightBlue = const Color(0xFFBBDEFB);
 
   @override
   void dispose() {
@@ -24,26 +26,53 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
     super.dispose();
   }
 
-  void _sendResetLink() async {
+  Future<void> _sendResetLink() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isSendingLink = true;
+        _errorMessage = null;
       });
 
-      // Simuler l'envoi du lien de réinitialisation
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        await FirebaseAuth.instance.sendPasswordResetEmail(
+          email: _emailController.text.trim(),
+        );
 
-      setState(() {
-        _isSendingLink = false;
-        _linkSent = true;
-      });
+        setState(() {
+          _isSendingLink = false;
+          _linkSent = true;
+        });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Lien de réinitialisation envoyé ! Vérifiez votre boîte mail.'),
-          backgroundColor: accentOrange,
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Lien de réinitialisation envoyé ! Vérifiez votre boîte mail.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          _isSendingLink = false;
+          _errorMessage = _getErrorMessage(e.code);
+        });
+      } catch (e) {
+        setState(() {
+          _isSendingLink = false;
+          _errorMessage = 'Une erreur inattendue est survenue';
+        });
+      }
+    }
+  }
+
+  String _getErrorMessage(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return 'Aucun utilisateur trouvé avec cet email';
+      case 'invalid-email':
+        return 'Adresse email invalide';
+      case 'user-disabled':
+        return 'Ce compte a été désactivé';
+      default:
+        return 'Échec de l\'envoi du lien de réinitialisation';
     }
   }
 
@@ -73,7 +102,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Icône avec gradient comme dans RegisterPage
+                  // Icône avec gradient
                   Container(
                     width: 100,
                     height: 100,
@@ -93,7 +122,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                   ),
                   const SizedBox(height: 32),
                   
-                  // Titre avec style harmonisé
+                  // Titre
                   Text(
                     'Réinitialiser votre mot de passe',
                     style: TextStyle(
@@ -114,7 +143,31 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                   ),
                   const SizedBox(height: 32),
                   
-                  // Champ Email avec le même style que RegisterPage
+                  // Affichage des erreurs
+                  if (_errorMessage != null)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: Colors.red),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _errorMessage!,
+                              style: TextStyle(color: Colors.red[800]),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  
+                  // Champ Email
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -151,7 +204,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                   ),
                   const SizedBox(height: 32),
                   
-                  // Bouton d'envoi avec le même style que RegisterPage
+                  // Bouton d'envoi
                   Container(
                     height: 56,
                     decoration: BoxDecoration(
@@ -188,20 +241,20 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                   ),
                   const SizedBox(height: 24),
                   
-                  // Message de confirmation lorsque le lien est envoyé
+                  // Message de confirmation
                   if (_linkSent)
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: accentOrange.withOpacity(0.1),
+                        color: Colors.green[50],
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: accentOrange.withOpacity(0.5)),
+                        border: Border.all(color: Colors.green[200]!),
                       ),
                       child: Column(
                         children: [
                           Icon(
                             Icons.check_circle_outline,
-                            color: accentOrange,
+                            color: Colors.green,
                             size: 48,
                           ),
                           const SizedBox(height: 16),
@@ -210,7 +263,7 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: accentOrange,
+                              color: Colors.green[800],
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -225,16 +278,26 @@ class _ForgetPasswordPageState extends State<ForgetPasswordPage> {
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.grey[800]),
                           ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Si vous ne voyez pas l\'email, vérifiez votre dossier spam.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey[800],
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   const SizedBox(height: 24),
                   
-                  // Lien de retour à la connexion, stylisé comme dans RegisterPage
+                  // Lien de retour à la connexion
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Vous vous souvenez de votre mot de passe?', style: TextStyle(color: Colors.grey[700])),
+                      Text('Vous vous souvenez de votre mot de passe?', 
+                          style: TextStyle(color: Colors.grey[700])),
                       TextButton(
                         onPressed: () {
                           Navigator.pop(context);
