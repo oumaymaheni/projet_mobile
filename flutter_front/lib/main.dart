@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
-import 'routes/app_routes.dart'; // Import centralisé ici
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart'; // Fichier généré automatiquement
+import 'routes/app_routes.dart'; // Routes centralisées
+import 'authentification/login.dart'; // Exemple de page login
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 

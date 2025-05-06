@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart' as signin_button;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -8,16 +12,23 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final Color primaryBlue = const Color(0xFF2979FF);
+  final Color secondaryBlue = const Color(0xFF75A7FF);
+  final Color backgroundWhite = Colors.white;
+  final Color textGrey = const Color(0xFF757575);
+  final Color lightGrey = const Color(0xFFEEEEEE);
+  final Color inputFillColor = const Color(0xFFF5F8FF);
+  final Color inputBorderColor = const Color(0xFFD0DFFF);
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
-  
-  // Définition des couleurs thématiques
-  final Color primaryBlue = const Color(0xFF1E88E5); // Bleu principal
-  final Color accentOrange = const Color(0xFFFF9800); // Orange accent
-  final Color lightBlue = const Color(0xFFBBDEFB); // Bleu clair pour fond
+  bool _isLoading = false;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void dispose() {
@@ -26,30 +37,111 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      // Implémentez ici votre logique de connexion
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Connexion en cours...')),
-      );
-      
-      // Simuler une connexion réussie après un court délai
-      Future.delayed(const Duration(seconds: 2), () {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Connexion réussie!'),
-            backgroundColor: primaryBlue,
-          ),
-        );
-      });
+  Future<void> createUserInFirestore(User firebaseUser) async {
+    try {
+      DocumentReference userDoc = _firestore.collection('users').doc(firebaseUser.uid);
+      DocumentSnapshot docSnapshot = await userDoc.get();
+      if (!docSnapshot.exists) {
+        await userDoc.set({
+          'name': firebaseUser.displayName ?? '',
+          'email': firebaseUser.email ?? '',
+          'avatar': firebaseUser.photoURL ?? '',
+          'phone': '',
+          'address': '',
+          'joinDate': Timestamp.fromDate(DateTime.now()),
+        });
+      }
+    } catch (e) {
+      print('Erreur lors de la création du document utilisateur : $e');
     }
   }
 
+  Future<void> _login() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        await createUserInFirestore(userCredential.user!);
+
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = 'Erreur de connexion';
+        if (e.code == 'user-not-found') {
+          errorMessage = 'Aucun utilisateur trouvé pour cet email';
+        } else if (e.code == 'wrong-password') {
+          errorMessage = 'Mot de passe incorrect';
+        } else if (e.code == 'invalid-email') {
+          errorMessage = 'Email invalide';
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      UserCredential authResult = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      await createUserInFirestore(authResult.user!);
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur de connexion Google: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightBlue.withOpacity(0.3), // Fond bleu très clair
+      backgroundColor: backgroundWhite,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -57,76 +149,32 @@ class _LoginPageState extends State<LoginPage> {
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo ou Image avec gradient bleu-orange
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [primaryBlue, accentOrange],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.lock_outlined,
-                      size: 50,
-                      color: Colors.white,
-                    ),
+                  Image.asset(
+                    'assets/images/home.png',
+                    width: 200,
+                    height: 200,
                   ),
-                  const SizedBox(height: 32),
-                  
-                  // Titre avec couleur bleue
+                  const SizedBox(height: 16),
+                
+                  const SizedBox(height: 16),
                   Text(
                     'Bienvenue',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: primaryBlue,
-                    ),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryBlue),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Connectez-vous à votre compte',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: textGrey),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
-                  
-                  // Champ Email
+                  const SizedBox(height: 25),
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      hintText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined, color: primaryBlue),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryBlue, width: 2),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
+                    decoration: _inputDecoration('Email', Icons.email_outlined),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez entrer votre email';
@@ -137,14 +185,12 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Champ Mot de passe
                   TextFormField(
                     controller: _passwordController,
                     obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      hintText: 'Mot de passe',
-                      prefixIcon: Icon(Icons.lock_outline, color: primaryBlue),
+                    decoration: _inputDecoration(
+                      'Mot de passe',
+                      Icons.lock_outline,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -156,24 +202,6 @@ class _LoginPageState extends State<LoginPage> {
                           });
                         },
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryBlue, width: 2),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -185,8 +213,6 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Options
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -206,25 +232,21 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text('Se souvenir de moi'),
+                          Text('Se souvenir de moi', style: TextStyle(color: textGrey)),
                         ],
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/forget-password');
                         },
-                        style: TextButton.styleFrom(
-                          foregroundColor: accentOrange,
-                        ),
+                        style: TextButton.styleFrom(foregroundColor: secondaryBlue),
                         child: const Text('Mot de passe oublié?'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
-                  // Bouton de connexion avec dégradé bleu-orange
                   ElevatedButton(
-                    onPressed: _login,
+                    onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -232,57 +254,51 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       backgroundColor: primaryBlue,
                     ),
-                    child: const Text(
-                      'Se connecter',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Autres options de connexion
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: Colors.grey[400])),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'Ou connectez-vous avec',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      ),
-                      Expanded(child: Divider(color: Colors.grey[400])),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Boutons de médias sociaux
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _socialButton(Icons.facebook, primaryBlue),
-                      const SizedBox(width: 16),
-                      _socialButton(Icons.g_mobiledata, accentOrange),
-                      const SizedBox(width: 16),
-                      _socialButton(Icons.apple, Colors.black),
-                    ],
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text(
+                            'Se connecter',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
                   ),
                   const SizedBox(height: 24),
-                  
-                  // Lien d'inscription avec couleur orange
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: lightGrey)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('Ou connectez-vous avec', style: TextStyle(color: textGrey)),
+                      ),
+                      Expanded(child: Divider(color: lightGrey)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 42,
+                    child: signin_button.SignInButton(
+                      signin_button.Buttons.Google,
+                      text: "Continuer avec Google",
+                      onPressed: _isLoading ? () {} : _signInWithGoogle,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Vous n'avez pas de compte?"),
+                      Text("Vous n'avez pas de compte?", style: TextStyle(color: textGrey)),
                       TextButton(
                         onPressed: () {
                           Navigator.pushNamed(context, '/register');
                         },
-                        style: TextButton.styleFrom(
-                          foregroundColor: accentOrange,
-                        ),
-                        child: const Text(
+                        child: Text(
                           "S'inscrire",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(fontWeight: FontWeight.bold, color: primaryBlue),
                         ),
                       ),
                     ],
@@ -296,33 +312,30 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _socialButton(IconData icon, Color color) {
-    return InkWell(
-      onTap: () {
-        // Implémentez la connexion avec le réseau social
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 30,
-        ),
+  InputDecoration _inputDecoration(String hint, IconData icon, {Widget? suffixIcon}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: textGrey),
+      prefixIcon: Icon(icon, color: primaryBlue),
+      suffixIcon: suffixIcon,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryBlue, width: 2),
       ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: inputBorderColor),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+      filled: true,
+      fillColor: inputFillColor,
     );
   }
 }

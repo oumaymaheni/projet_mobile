@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart' as signin_button;
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -8,6 +11,15 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
+  // Utilisation des mêmes couleurs que LoginPage
+  final Color primaryBlue = const Color(0xFF2979FF);
+  final Color secondaryBlue = const Color(0xFF75A7FF);
+  final Color backgroundWhite = Colors.white;
+  final Color textGrey = const Color(0xFF757575);
+  final Color lightGrey = const Color(0xFFEEEEEE);
+  final Color inputFillColor = const Color(0xFFF5F8FF);
+  final Color inputBorderColor = const Color(0xFFD0DFFF);
+
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -16,11 +28,9 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _acceptTerms = false;
-  
-  // Définition des couleurs thématiques
-  final Color primaryBlue = const Color(0xFF1E88E5); // Bleu principal
-  final Color accentOrange = const Color(0xFFFF9800); // Orange accent
-  final Color lightBlue = const Color(0xFFBBDEFB); // Bleu clair pour fond
+  bool _isLoading = false;
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
 
   @override
   void dispose() {
@@ -31,54 +41,105 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void _register() {
-    if (_formKey.currentState!.validate() && _acceptTerms) {
-      // Implémentez ici votre logique d'inscription
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inscription en cours...')),
-      );
-      
-      // Simuler une inscription réussie après un court délai
-      Future.delayed(const Duration(seconds: 2), () {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  Future<void> _register() async {
+    if (_formKey.currentState!.validate()) {
+      if (!_acceptTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Inscription réussie!'),
-            backgroundColor: primaryBlue,
+          const SnackBar(
+            content: Text('Veuillez accepter les conditions d\'utilisation'),
+            backgroundColor: Colors.red,
           ),
         );
-        
-        // Retourner à la page de connexion après inscription
-        Future.delayed(const Duration(seconds: 1), () {
-          Navigator.pop(context);
-        });
+        return;
+      }
+
+      setState(() {
+        _isLoading = true;
       });
-    } else if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Veuillez accepter les conditions d\'utilisation.'),
-          backgroundColor: Colors.red,
-        ),
+
+      try {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Inscription réussie!'),
+              backgroundColor: primaryBlue,
+            ),
+          );
+          Navigator.pop(context);
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = 'Erreur d\'inscription';
+        if (e.code == 'email-already-in-use') {
+          errorMessage = 'Cet email est déjà utilisé';
+        } else if (e.code == 'weak-password') {
+          errorMessage = 'Le mot de passe est trop faible';
+        } else if (e.code == 'invalid-email') {
+          errorMessage = 'Email invalide';
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur de connexion Google: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: primaryBlue,
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'Inscription',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      backgroundColor: lightBlue.withOpacity(0.3),
+      backgroundColor: backgroundWhite,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -86,76 +147,30 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Form(
               key: _formKey,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Logo ou Image avec gradient bleu-orange
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [primaryBlue, accentOrange],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.app_registration,
-                      size: 50,
-                      color: Colors.white,
-                    ),
+                  Image.asset(
+                    'assets/images/drawer_design.jpg',
+                    width: 200,
+                    height: 200,
                   ),
-                  const SizedBox(height: 32),
-                  
-                  // Titre avec couleur bleue
+                  const SizedBox(height: 16),
                   Text(
                     'Créer un compte',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: primaryBlue,
-                    ),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryBlue),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Commencer avec votre nouveau compte',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: textGrey),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
-                  
-                  // Champ Nom
+                  const SizedBox(height: 25),
                   TextFormField(
                     controller: _nameController,
                     keyboardType: TextInputType.name,
-                    decoration: InputDecoration(
-                      hintText: 'Nom complet',
-                      prefixIcon: Icon(Icons.person_outline, color: primaryBlue),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryBlue, width: 2),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
+                    decoration: _inputDecoration('Nom complet', Icons.person_outline),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez entrer votre nom';
@@ -164,33 +179,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Champ Email
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      hintText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined, color: primaryBlue),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryBlue, width: 2),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
+                    decoration: _inputDecoration('Email', Icons.email_outlined),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez entrer votre email';
@@ -201,14 +193,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Champ Mot de passe
                   TextFormField(
                     controller: _passwordController,
                     obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      hintText: 'Mot de passe',
-                      prefixIcon: Icon(Icons.lock_outline, color: primaryBlue),
+                    decoration: _inputDecoration(
+                      'Mot de passe',
+                      Icons.lock_outline,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -220,24 +210,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           });
                         },
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryBlue, width: 2),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -249,14 +221,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Champ Confirmation Mot de passe
                   TextFormField(
                     controller: _confirmPasswordController,
                     obscureText: !_isConfirmPasswordVisible,
-                    decoration: InputDecoration(
-                      hintText: 'Confirmer le mot de passe',
-                      prefixIcon: Icon(Icons.lock_outline, color: primaryBlue),
+                    decoration: _inputDecoration(
+                      'Confirmer le mot de passe',
+                      Icons.lock_outline,
                       suffixIcon: IconButton(
                         icon: Icon(
                           _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
@@ -268,24 +238,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           });
                         },
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryBlue, width: 2),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red),
-                      ),
-                      focusedErrorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.red, width: 2),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -296,9 +248,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 24),
-                  
-                  // Case à cocher pour les conditions d'utilisation
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       SizedBox(
@@ -319,12 +269,12 @@ class _RegisterPageState extends State<RegisterPage> {
                         child: RichText(
                           text: TextSpan(
                             text: 'J\'accepte les ',
-                            style: TextStyle(color: Colors.grey[800]),
+                            style: TextStyle(color: textGrey),
                             children: [
                               TextSpan(
                                 text: 'conditions d\'utilisation',
                                 style: TextStyle(
-                                  color: accentOrange,
+                                  color: primaryBlue,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -335,7 +285,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               TextSpan(
                                 text: 'politique de confidentialité',
                                 style: TextStyle(
-                                  color: accentOrange,
+                                  color: primaryBlue,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -345,85 +295,61 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  
-                  // Bouton d'inscription avec dégradé bleu-orange
-                  Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: LinearGradient(
-                        colors: [primaryBlue, accentOrange],
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _register,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
+                      backgroundColor: primaryBlue,
                     ),
-                    child: ElevatedButton(
-                      onPressed: _register,
-                      style: ElevatedButton.styleFrom(
-                        elevation: 0,
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'S\'inscrire',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text(
+                            'S\'inscrire',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
                   ),
                   const SizedBox(height: 24),
-                  
-                  // Séparateur
                   Row(
                     children: [
-                      Expanded(child: Divider(color: Colors.grey[400])),
+                      Expanded(child: Divider(color: lightGrey)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'Ou inscrivez-vous avec',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
+                        child: Text('Ou inscrivez-vous avec', style: TextStyle(color: textGrey)),
                       ),
-                      Expanded(child: Divider(color: Colors.grey[400])),
+                      Expanded(child: Divider(color: lightGrey)),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  
-                  // Boutons de médias sociaux
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 42,
+                    child: signin_button.SignInButton(
+                      signin_button.Buttons.Google,
+                      text: "Continuer avec Google",
+                      onPressed: _isLoading ? () {} : _signInWithGoogle,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _socialButton(Icons.facebook, primaryBlue),
-                      const SizedBox(width: 16),
-                      _socialButton(Icons.g_mobiledata, accentOrange),
-                      const SizedBox(width: 16),
-                      _socialButton(Icons.apple, Colors.black),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  
-                  // Lien de connexion
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Vous avez déjà un compte?'),
+                      Text("Vous avez déjà un compte?", style: TextStyle(color: textGrey)),
                       TextButton(
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        style: TextButton.styleFrom(
-                          foregroundColor: accentOrange,
-                        ),
-                        child: const Text(
-                          'Se connecter',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child: Text(
+                          "Se connecter",
+                          style: TextStyle(fontWeight: FontWeight.bold, color: primaryBlue),
                         ),
                       ),
                     ],
@@ -436,34 +362,31 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
   }
-  
-  Widget _socialButton(IconData icon, Color color) {
-    return InkWell(
-      onTap: () {
-        // Implémentez la connexion avec le réseau social
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 30,
-        ),
+
+  InputDecoration _inputDecoration(String hint, IconData icon, {Widget? suffixIcon}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: textGrey),
+      prefixIcon: Icon(icon, color: primaryBlue),
+      suffixIcon: suffixIcon,
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primaryBlue, width: 2),
       ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: inputBorderColor),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+      filled: true,
+      fillColor: inputFillColor,
     );
   }
 }
