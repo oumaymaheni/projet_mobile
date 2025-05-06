@@ -1,485 +1,579 @@
-// lib/screens/user_profile_page.dart
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../theme/app_theme.dart';
 import '../models/user_model.dart';
 import '../widgets/gradient_button.dart';
-
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 class UserProfilePage extends StatefulWidget {
-  final User userData;
-
-  UserProfilePage({Key? key, required this.userData}) : super(key: key);
+  final User? userData;
+  const UserProfilePage({Key? key, this.userData}) : super(key: key);
  
   @override
   _UserProfilePageState createState() => _UserProfilePageState();
 }
- 
-class _UserProfilePageState extends State<UserProfilePage> {
-  // Données utilisateur par défaut
-  final User _defaultUser = User(
-    name: 'Jean Dupont',
-    email: 'jean.dupont@exemple.com',
-    phone: '+33 6 12 34 56 78',
-    address: '123 Rue de Paris, 75001 Paris',
-    joinDate: '12/05/2023',
-    avatar: 'https://via.placeholder.com/150',
-  );
 
-  User get _user {
-    return widget.userData ?? _defaultUser;
+class _UserProfilePageState extends State<UserProfilePage> {
+  User? _currentUser;
+  final ImagePicker _picker = ImagePicker();
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+  late TextEditingController _addressController;
+  bool _isEditing = false;
+  bool _isLoading = false;
+
+  // Couleurs harmonisées avec le login
+  final Color _primaryBlue = const Color(0xFF2979FF);
+  final Color _secondaryBlue = const Color(0xFF75A7FF);
+  final Color _backgroundWhite = Colors.white;
+  final Color _textGrey = const Color(0xFF757575);
+  final Color _lightGrey = const Color(0xFFEEEEEE);
+  final Color _inputFillColor = const Color(0xFFF5F8FF);
+  final Color _inputBorderColor = const Color(0xFFD0DFFF);
+
+  User? get _user => _currentUser ?? widget.userData;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+    _initializeControllers();
   }
 
-  // Couleurs d'accent orange qui complètent le bleu existant
-  final Color accentOrange = const Color(0xFFFF7D00);
-  final Color lightOrange = const Color(0xFFFFE0C4);
+  void _initializeControllers() {
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _addressController = TextEditingController();
+  }
+
+  void _updateControllers() {
+    if (_user != null) {
+      _nameController.text = _user!.name;
+      _emailController.text = _user!.email;
+      _phoneController.text = _user!.phone ?? '';
+      _addressController.text = _user!.address ?? '';
+    }
+  }
+ Future<void> _pickAndUploadImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final bytes = await image.readAsBytes();
+      final base64Image = base64Encode(bytes);
+      const apiKey = '82842c6b96e27bc5c0f6d72cd45c27da'; // <-- Remplace ici
+
+      final response = await http.post(
+        Uri.parse('https://api.imgbb.com/1/upload'),
+        body: {
+          'key': apiKey,
+          'image': base64Image,
+        },
+      );
+
+      final jsonResponse = json.decode(response.body);
+      if (jsonResponse['success']) {
+        final imageUrl = jsonResponse['data']['url'];
+        final user = fb_auth.FirebaseAuth.instance.currentUser;
+
+        if (user != null) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .update({'avatar': imageUrl});
+          setState(() {
+            _currentUser = _currentUser?.copyWith(avatar: imageUrl);
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Photo de profil mise à jour'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception('Upload failed');
+      }
+    } catch (e) {
+      print('Erreur upload: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors de l\'upload: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+  Future<void> _fetchUserData() async {
+    try {
+      final fb_auth.User? firebaseUser = fb_auth.FirebaseAuth.instance.currentUser;
+      
+      if (firebaseUser != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(firebaseUser.uid)
+            .get();
+            
+        if (doc.exists) {
+          setState(() {
+            _currentUser = User.fromMap(doc.data()!);
+            _updateControllers();
+          });
+        }
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération: $e');
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      
+      try {
+        final fb_auth.User? firebaseUser = fb_auth.FirebaseAuth.instance.currentUser;
+        
+        if (firebaseUser != null) {
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(firebaseUser.uid)
+              .update({
+                'name': _nameController.text,
+                'phone': _phoneController.text,
+                'address': _addressController.text,
+              });
+              
+          setState(() {
+            _isEditing = false;
+            _currentUser = User(
+              name: _nameController.text,
+              email: _emailController.text,
+              phone: _phoneController.text,
+              address: _addressController.text,
+              joinDate: _user?.joinDate ?? '',
+              avatar: _user?.avatar,
+            );
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profil mis à jour avec succès'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la mise à jour: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_user == null) {
+      return Scaffold(
+        backgroundColor: _backgroundWhite,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: _backgroundWhite,
       body: CustomScrollView(
         slivers: [
-          // En-tête avec avatar et nom (SliverAppBar pour un effet de parallaxe)
           SliverAppBar(
             expandedHeight: 200.0,
             floating: false,
             pinned: true,
-            backgroundColor: AppTheme.primaryBlue, // Gardé le bleu original
+            backgroundColor: _primaryBlue,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
               onPressed: () => Navigator.pop(context),
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text('Édition du profil à implémenter'),
-                      backgroundColor: accentOrange, // SnackBar orange
-                    ),
-                  );
-                },
-              ),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: AppTheme.primaryGradient, // Gardé le gradient bleu original
+              if (!_isLoading)
+                IconButton(
+                  icon: Icon(_isEditing ? Icons.save : Icons.edit, color: Colors.white),
+                  onPressed: () {
+                    if (_isEditing) {
+                      _saveProfile();
+                    } else {
+                      setState(() => _isEditing = true);
+                    }
+                  },
                 ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Avatar avec bordure orange
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: accentOrange, width: 4), // Bordure orange
-                          color: Colors.white,
-                        ),
-                        child: ClipOval(
-                          child: _user.avatar != null
-                              ? Image.network(
-                                  _user.avatar!,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(
-                                      Icons.person,
-                                      size: 80,
-                                      color: Colors.grey.shade400,
-                                    );
-                                  },
-                                )
-                              : Icon(
-                                  Icons.person,
-                                  size: 80,
-                                  color: Colors.grey.shade400,
-                                ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Nom et email masqués quand l'app bar est réduite
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  ),
+                ),
+            ],
+         flexibleSpace: FlexibleSpaceBar(
+      collapseMode: CollapseMode.pin,
+      background: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/drawer_design2.png'),
+            fit: BoxFit.cover,
+          
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              InkWell(
+                onTap: _isEditing ? _pickAndUploadImage : null,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.white,
+                  child: ClipOval(
+                    child: _user!.avatar != null
+                        ? Image.network(
+                            _user!.avatar!,
+                            fit: BoxFit.cover,
+                            width: 96,
+                            height: 96,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.person,
+                                size: 50,
+                                color: _primaryBlue,
+                              );
+                            },
+                          )
+                        : Icon(
+                            Icons.person,
+                            size: 50,
+                            color: _primaryBlue,
+                          ),
+                  ),
+                ),
+              ),
+                      const SizedBox(height: 16),
                       Text(
-                        _user.name,
+                        _user!.name,
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
-                        _user.email,
+                        _user!.email,
                         style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.white,
+                          fontSize: 14,
+                          color: Colors.white70,
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              title: const Text('Profil Utilisateur'),
             ),
           ),
-          
-          // Contenu principal
           SliverPadding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(24.0),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Informations personnelles
-                _buildSectionCard(
-                  'Informations personnelles',
-                  [
-                    _buildInfoRow(
-                      Icons.phone,
-                      'Téléphone',
-                      _user.phone,
-                      onTap: () {
-                        // Action lorsque l'utilisateur appuie sur le numéro de téléphone
-                      },
-                    ),
-                    const Divider(height: 1), // Divider standard
-                    _buildInfoRow(
-                      Icons.location_on,
-                      'Adresse',
-                      _user.address,
-                      onTap: () {
-                        // Action lorsque l'utilisateur appuie sur l'adresse
-                      },
-                    ),
-                    Divider(height: 1, color: lightOrange), // Divider orange clair
-                    _buildInfoRow(
-                      Icons.calendar_today,
-                      'Membre depuis',
-                      _user.joinDate,
-                    ),
-                  ],
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Informations personnelles',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: _primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableField(
+                        context,
+                        icon: Icons.person_outline,
+                        label: 'Nom complet',
+                        controller: _nameController,
+                        isEditing: _isEditing,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Veuillez entrer votre nom';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableField(
+                        context,
+                        icon: Icons.email_outlined,
+                        label: 'Email',
+                        controller: _emailController,
+                        isEditing: false,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableField(
+                        context,
+                        icon: Icons.phone_outlined,
+                        label: 'Téléphone',
+                        controller: _phoneController,
+                        isEditing: _isEditing,
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildEditableField(
+                        context,
+                        icon: Icons.location_on_outlined,
+                        label: 'Adresse',
+                        controller: _addressController,
+                        isEditing: _isEditing,
+                      ),
+                      const SizedBox(height: 24),
+                      if (!_isEditing)
+                        ElevatedButton(
+                          onPressed: () => _showChangePasswordDialog(context),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            backgroundColor: _primaryBlue,
+                          ),
+                          child: const Text(
+                            'Changer le mot de passe',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                          ),
+                        ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
-                
-                const SizedBox(height: 20),
-                
-                // Préférences utilisateur
-                _buildSectionCard(
-                  'Préférences',
-                  [
-                    _buildSettingRow(
-                      Icons.home_outlined,
-                      'Mes propriétés',
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Mes propriétés à implémenter'),
-                            backgroundColor: accentOrange, // SnackBar orange
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(height: 1, color: lightOrange), // Divider orange clair
-                    _buildSettingRow(
-                      Icons.favorite_border,
-                      'Mes favoris',
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Mes favoris à implémenter'),
-                            backgroundColor: accentOrange, // SnackBar orange
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(height: 1, color: lightOrange), // Divider orange clair
-                    _buildSettingRow(
-                      Icons.history,
-                      'Historique de recherche',
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Historique à implémenter'),
-                            backgroundColor: accentOrange, // SnackBar orange
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Paramètres de compte
-                _buildSectionCard(
-                  'Paramètres du compte',
-                  [
-                    _buildSettingRow(
-                      Icons.lock_outline,
-                      'Changer le mot de passe',
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Changement de mot de passe à implémenter'),
-                            backgroundColor: accentOrange, // SnackBar orange
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(height: 1, color: lightOrange), // Divider orange clair
-                    _buildSettingRow(
-                      Icons.notifications_none,
-                      'Notifications',
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Paramètres de notification à implémenter'),
-                            backgroundColor: accentOrange, // SnackBar orange
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(height: 1, color: lightOrange), // Divider orange clair
-                    _buildSettingRow(
-                      Icons.language,
-                      'Langue',
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Paramètres de langue à implémenter'),
-                            backgroundColor: accentOrange, // SnackBar orange
-                          ),
-                        );
-                      },
-                    ),
-                    Divider(height: 1, color: lightOrange), // Divider orange clair
-                    _buildSettingRow(
-                      Icons.privacy_tip_outlined,
-                      'Confidentialité',
-                      () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Paramètres de confidentialité à implémenter'),
-                            backgroundColor: accentOrange, // SnackBar orange
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                
-                const SizedBox(height: 30),
-                
-                // Bouton de déconnexion
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 20),
-                //   child: GradientButton(
-                //     text: 'Déconnexion',
-                //     gradient: LinearGradient(
-                //       colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.shade700 ?? Colors.blue.shade700], // Gardé le gradient bleu
-                //     ),
-                //     onPressed: () {
-                //       showDialog(
-                //         context: context,
-                //         builder: (context) => AlertDialog(
-                //           title: const Text('Déconnexion'),
-                //           content: const Text('Voulez-vous vraiment vous déconnecter ?'),
-                //           actions: [
-                //             TextButton(
-                //               onPressed: () => Navigator.pop(context),
-                //               child: Text(
-                //                 'Annuler',
-                //                 style: TextStyle(color: Colors.grey[700]),
-                //               ),
-                //             ),
-                //             TextButton(
-                //               onPressed: () {
-                //                 Navigator.pop(context);
-                //                 // Mettre ici la logique de déconnexion et de redirection
-                //                 ScaffoldMessenger.of(context).showSnackBar(
-                //                   SnackBar(
-                //                     content: const Text('Déconnexion à implémenter'),
-                //                     backgroundColor: accentOrange, // SnackBar orange
-                //                   ),
-                //                 );
-                //               },
-                //               child: Text(
-                //                 'Déconnecter',
-                //                 style: TextStyle(color: Colors.red[700]), // Texte rouge pour déconnexion
-                //               ),
-                //             ),
-                //           ],
-                //         ),
-                //       );
-                //     },
-                //   ),
-                // ),
-                
-                const SizedBox(height: 20),
               ]),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 4, // Indice de l'onglet Profil
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppTheme.primaryBlue, // Garder la couleur bleue pour l'onglet sélectionné
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Accueil',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Rechercher',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Favoris',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message_outlined),
-            activeIcon: Icon(Icons.message),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
-        onTap: (index) {
-          if (index != 4) {
-            // Navigation vers d'autres pages
-          }
-        },
-      ),
     );
   }
 
-  // Fonction pour créer une carte de section
-  Widget _buildSectionCard(String title, List<Widget> children) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
+void _showChangePasswordDialog(BuildContext context) {
+  final oldPasswordController = TextEditingController();
+  final newPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) => Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryBlue, // Titre en bleu
-              ),
+            Icon(Icons.lock_reset, size: 60, color: _primaryBlue),
+            const SizedBox(height: 16),
+            Text('Changer le mot de passe',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: _primaryBlue,
+                )),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: oldPasswordController,
+              obscureText: true,
+              decoration: _inputDecoration('Ancien mot de passe', Icons.lock_outline),
             ),
-            const SizedBox(height: 15),
-            ...children,
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Widget pour afficher une ligne d'information
-  Widget _buildInfoRow(IconData icon, String label, String value, {VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryBlue.withOpacity(0.1), // Fond bleu transparent
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: accentOrange, // Icône orange
-                size: 24,
-              ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: newPasswordController,
+              obscureText: true,
+              decoration: _inputDecoration('Nouveau mot de passe', Icons.lock_outline),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.textLight,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textDark,
-                    ),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: confirmPasswordController,
+              obscureText: true,
+              decoration: _inputDecoration('Confirmer le mot de passe', Icons.lock_outline),
             ),
-            if (onTap != null)
-              Icon(
-                Icons.arrow_forward_ios,
-                color: accentOrange.withOpacity(0.6), // Icône orange semi-transparente
-                size: 16,
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Widget pour afficher une ligne de paramètre
-  Widget _buildSettingRow(IconData icon, String label, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: lightOrange, // Fond orange clair
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: accentOrange, // Icône orange
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textDark,
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Annuler'),
                 ),
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: accentOrange.withOpacity(0.6), // Icône orange semi-transparente
-              size: 16,
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (newPasswordController.text != confirmPasswordController.text) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Les mots de passe ne correspondent pas'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      final user = fb_auth.FirebaseAuth.instance.currentUser;
+                      if (user != null) {
+                        final cred = fb_auth.EmailAuthProvider.credential(
+                          email: user.email!,
+                          password: oldPasswordController.text,
+                        );
+
+                        await user.reauthenticateWithCredential(cred);
+                        await user.updatePassword(newPasswordController.text);
+
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Mot de passe changé avec succès'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } on fb_auth.FirebaseAuthException catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Erreur: ${e.message}'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.check),
+                  label: const Text('Enregistrer'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
+    ),
+  );
+}
+
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: _textGrey),
+      prefixIcon: Icon(icon, color: _primaryBlue),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: _inputBorderColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: _inputBorderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: _primaryBlue, width: 2),
+      ),
+      filled: true,
+      fillColor: _inputFillColor,
     );
+  }
+
+  Widget _buildEditableField(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    TextEditingController? controller,
+    bool isEditing = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return isEditing
+        ? TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            validator: validator,
+            decoration: _inputDecoration(label, icon),
+          )
+        : Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              color: _inputFillColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _inputBorderColor),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, color: _primaryBlue),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _textGrey,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        controller?.text ?? '',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
   }
 }

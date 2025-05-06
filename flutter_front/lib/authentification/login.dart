@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart' as signin_button;
-import 'package:flutter/services.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
 
@@ -27,12 +28,32 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> createUserInFirestore(User firebaseUser) async {
+    try {
+      DocumentReference userDoc = _firestore.collection('users').doc(firebaseUser.uid);
+      DocumentSnapshot docSnapshot = await userDoc.get();
+      if (!docSnapshot.exists) {
+        await userDoc.set({
+          'name': firebaseUser.displayName ?? '',
+          'email': firebaseUser.email ?? '',
+          'avatar': firebaseUser.photoURL ?? '',
+          'phone': '',
+          'address': '',
+          'joinDate': Timestamp.fromDate(DateTime.now()),
+        });
+      }
+    } catch (e) {
+      print('Erreur lors de la création du document utilisateur : $e');
+    }
   }
 
   Future<void> _login() async {
@@ -42,10 +63,12 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+
+        await createUserInFirestore(userCredential.user!);
 
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/home');
@@ -91,7 +114,9 @@ class _LoginPageState extends State<LoginPage> {
         idToken: googleAuth.idToken,
       );
 
-      await FirebaseAuth.instance.signInWithCredential(credential);
+      UserCredential authResult = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      await createUserInFirestore(authResult.user!);
 
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
@@ -113,7 +138,6 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

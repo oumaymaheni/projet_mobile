@@ -3,27 +3,33 @@ import 'package:flutter/material.dart';
 class GradientButton extends StatelessWidget {
   final Widget child;
   final VoidCallback onPressed;
+  final Gradient gradient;
 
   const GradientButton({
     required this.child,
     required this.onPressed,
+    required this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        backgroundColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        elevation: 0,
-      ).copyWith(
-        backgroundColor: MaterialStateProperty.all<Color>(
-          Colors.blue, // tu peux utiliser un gradient ici via décorations personnalisées
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(8),
       ),
-      onPressed: onPressed,
-      child: child,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        onPressed: onPressed,
+        child: child,
+      ),
     );
   }
 }
