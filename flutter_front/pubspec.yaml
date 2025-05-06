@@ -36,6 +36,8 @@ dependencies:
   flutter_signin_button: ^2.0.0 
   cloud_firestore: ^5.0.0
   firebase_database: ^11.3.5
+  flutter_image: ^4.1.4
+
   
 
 
@@ -69,6 +71,8 @@ flutter:
   assets:
      - assets/images/landing_page.png
      - assets/images/home.png
+     - assets/images/drawer_design.jpg
+     - assets/images/city.gif
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
