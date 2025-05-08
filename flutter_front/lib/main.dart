@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_maps_flutter_web/google_maps_flutter_web.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'firebase_options.dart'; // Fichier généré automatiquement
 import 'routes/app_routes.dart'; // Routes centralisées
 import 'authentification/login.dart'; // Exemple de page login
