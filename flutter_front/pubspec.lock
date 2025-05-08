@@ -97,7 +97,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
-
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -239,7 +238,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.0.0"
-
   flutter_map:
     dependency: "direct main"
     description:
@@ -248,7 +246,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.2.1"
-    
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -411,12 +408,8 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.12.4+4"
-
   html:
     dependency: transitive
-
-  http:
-    dependency: "direct main"
     description:
       name: html
       sha256: "6d1264f2dffa1b1101c25a91dff0dc2daee4c18e87cd8538729773c073dbf602"
@@ -431,7 +424,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
-
   http_parser:
     dependency: transitive
     description:

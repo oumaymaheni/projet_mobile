@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/maison_models.dart';
 import '../maison/post_house.dart';
 
-
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -11,10 +10,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final Color primaryBlue = const Color(0xFF1E88E5);
-  final Color accentOrange = const Color(0xFFFF9800);
-  final Color lightBlue = const Color(0xFFBBDEFB);
+  // Définition des couleurs thématiques
+  final Color primaryBlue = const Color(0xFF1E88E5); // Bleu principal
+  final Color accentOrange = const Color(0xFFFF9800); // Orange accent
+  final Color lightBlue = const Color(0xFFBBDEFB); // Bleu clair pour fond
 
+  // Liste des maisons à louer (exemple)
   final List<House> _houses = [
     House(
       id: '1',
@@ -128,6 +129,7 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
+  // Filtres
   String _selectedFilter = 'Tous';
   final List<String> _filters = [
     'Tous',
@@ -136,18 +138,6 @@ class _HomePageState extends State<HomePage> {
     'Prix bas',
     'Prix élevé',
   ];
-
-  int _selectedIndex = 0;
-
-  void _onBottomNavTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    if (index == 4) {
-      Navigator.pushNamed(context, '/userProfile');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,14 +157,13 @@ class _HomePageState extends State<HomePage> {
           ),
           IconButton(
             icon: Icon(Icons.person_outline, color: Colors.white),
-            onPressed: () {
-              Navigator.pushNamed(context, '/userProfile');
-            },
+            onPressed: () {},
           ),
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // En-tête avec recherche
             Container(
@@ -341,117 +330,30 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onBottomNavTapped,
+        currentIndex: 0,
         selectedItemColor: primaryBlue,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Accueil'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Rechercher'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Favoris'),
-          BottomNavigationBarItem(icon: Icon(Icons.message_outlined), label: 'Messages'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profil'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: BoxDecoration(
-        color: primaryBlue,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(30),
-          bottomRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Trouvez votre\nmaison idéale',
-              style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
-          SizedBox(height: 20),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Rechercher une maison',
-                prefixIcon: Icon(Icons.search, color: primaryBlue),
-                border: InputBorder.none,
-              ),
-            ),
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Accueil',
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChips() {
-    return Column(
-      children: [
-        SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text('Catégories', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: 'Rechercher',
           ),
-        ),
-        SizedBox(height: 10),
-        SizedBox(
-          height: 40,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _filters.length,
-            itemBuilder: (context, index) {
-              final filter = _filters[index];
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: FilterChip(
-                  label: Text(filter),
-                  selected: _selectedFilter == filter,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedFilter = filter;
-                    });
-                  },
-                  selectedColor: accentOrange,
-                  backgroundColor: Colors.white,
-                  checkmarkColor: Colors.white,
-                  labelStyle: TextStyle(
-                    color: _selectedFilter == filter ? Colors.white : Colors.black87,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: _selectedFilter == filter ? accentOrange : Colors.grey.shade300,
-                    ),
-                  ),
-                ),
-              );
-            },
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            label: 'Favoris',
           ),
-        ),
-        SizedBox(height: 20),
-      ],
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          TextButton(
-            onPressed: () {},
-            child: Text('Voir tout', style: TextStyle(color: accentOrange)),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message_outlined),
+            label: 'Messages',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Profil',
           ),
         ],
       ),
@@ -465,28 +367,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildHorizontalHouseList() {
-    return SizedBox(
-      height: 300,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _houses.length,
-        itemBuilder: (context, index) => _featuredHouseCard(_houses[index]),
-      ),
-    );
-  }
-
-  Widget _buildVerticalHouseList() {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.symmetric(horizontal: 16),
-      itemCount: _houses.length,
-      itemBuilder: (context, index) => _houseListItem(_houses[index]),
-    );
-  }
-
+  // Widget pour une carte de maison dans la section "recommandées"
   Widget _featuredHouseCard(House house) {
     return Container(
       width: 240,
@@ -497,6 +378,7 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Image de la maison
             Stack(
               children: [
                 ClipRRect(
@@ -504,7 +386,7 @@ class _HomePageState extends State<HomePage> {
                   child: Container(
                     height: 150,
                     width: double.infinity,
-                    color: Colors.grey.shade300,
+                    color: Colors.grey.shade300, // Fallback color
                     child: Image.network(
                       house.imageUrls.isNotEmpty ? house.imageUrls[0] : '',
                       fit: BoxFit.cover,
@@ -531,7 +413,10 @@ class _HomePageState extends State<HomePage> {
                     },
                     child: Container(
                       padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(
                         house.isFavorite
                             ? Icons.favorite
@@ -544,16 +429,22 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
+            // Informations de la maison
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(children: [
-                    Icon(Icons.star, color: Colors.amber, size: 18),
-                    SizedBox(width: 4),
-                    Text(house.rating.toString(), style: TextStyle(fontWeight: FontWeight.bold)),
-                  ]),
+                  Row(
+                    children: [
+                      Icon(Icons.star, color: Colors.amber, size: 18),
+                      SizedBox(width: 4),
+                      Text(
+                        house.rating.toString(),
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 6),
                   Text(
                     house.title,
@@ -585,7 +476,19 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   SizedBox(height: 8),
-                  Text('${house.price} €/mois', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primaryBlue)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${house.price} €/mois',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: primaryBlue,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -595,6 +498,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Widget pour un item de maison dans la liste "à proximité"
   Widget _houseListItem(House house) {
     return Card(
       margin: EdgeInsets.only(bottom: 12),
@@ -603,13 +507,15 @@ class _HomePageState extends State<HomePage> {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Image de la maison
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Container(
                 width: 100,
                 height: 100,
-                color: Colors.grey.shade300,
+                color: Colors.grey.shade300, // Fallback color
                 child: Image.network(
                   house.imageUrls.isNotEmpty ? house.imageUrls[0] : '',
                   fit: BoxFit.cover,
@@ -626,6 +532,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(width: 12),
+            // Informations de la maison
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -693,9 +600,14 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   SizedBox(height: 4),
-                  Text(house.address, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-                  SizedBox(height: 6),
-                  Text('${house.price} €/mois', style: TextStyle(fontWeight: FontWeight.bold, color: primaryBlue)),
+                  Text(
+                    '${house.price} €/mois',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: primaryBlue,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -705,10 +617,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _featureItem(IconData icon, String label) {
+  // Widget pour les caractéristiques de la maison (icône + texte)
+  Widget _featureItem(IconData icon, String text) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey),
+        Icon(icon, size: 16, color: Colors.grey.shade600),
         SizedBox(width: 4),
         Text(text, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
       ],
