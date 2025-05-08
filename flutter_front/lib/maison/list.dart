@@ -139,6 +139,18 @@ class _HomePageState extends State<HomePage> {
     'Prix élevé',
   ];
 
+  int _selectedIndex = 0;
+
+  void _onBottomNavTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 4) {
+      Navigator.pushNamed(context, '/userProfile');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -330,7 +342,8 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
+      currentIndex: _selectedIndex,
+        onTap: _onBottomNavTapped,
         selectedItemColor: primaryBlue,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
