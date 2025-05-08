@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/maison_models.dart';
+import '../maison/post_house.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -23,9 +25,19 @@ class _HomePageState extends State<HomePage> {
       bedrooms: 4,
       bathrooms: 2,
       surface: 180,
-      imageUrl: 'https://example.com/house1.jpg',
+      imageUrls: ['https://example.com/house1.jpg'],
       rating: 4.8,
       isFavorite: false,
+      locality: 'Paris',
+      city: 'Paris',
+      state: 'Île-de-France',
+      pinCode: '75000',
+      houseNo: '123',
+      society: 'Résidence des Fleurs',
+      latitude: 48.8566,
+      longitude: 2.3522,
+      createdAt: DateTime.now(),
+      publisher: '...', 
     ),
     House(
       id: '2',
@@ -35,9 +47,19 @@ class _HomePageState extends State<HomePage> {
       bedrooms: 2,
       bathrooms: 1,
       surface: 75,
-      imageUrl: 'https://example.com/house2.jpg',
+      imageUrls: ['https://example.com/house2.jpg'],
       rating: 4.2,
       isFavorite: true,
+      locality: 'Lyon',
+      city: 'Lyon',
+      state: 'Auvergne-Rhône-Alpes',
+      pinCode: '69000',
+      houseNo: '45',
+      society: 'Résidence Victor Hugo',
+      latitude: 45.7640,
+      longitude: 4.8357,
+      createdAt: DateTime.now(),
+      publisher: '...', 
     ),
     House(
       id: '3',
@@ -47,9 +69,19 @@ class _HomePageState extends State<HomePage> {
       bedrooms: 3,
       bathrooms: 2,
       surface: 150,
-      imageUrl: 'https://example.com/house3.jpg',
+      imageUrls: ['https://example.com/house3.jpg'],
       rating: 4.5,
       isFavorite: false,
+      locality: 'Bordeaux',
+      city: 'Bordeaux',
+      state: 'Nouvelle-Aquitaine',
+      pinCode: '33000',
+      houseNo: '8',
+      society: 'Domaine des Vignes',
+      latitude: 44.8378,
+      longitude: -0.5792,
+      createdAt: DateTime.now(),
+      publisher: '...', 
     ),
     House(
       id: '4',
@@ -59,9 +91,19 @@ class _HomePageState extends State<HomePage> {
       bedrooms: 2,
       bathrooms: 1,
       surface: 95,
-      imageUrl: 'https://example.com/house4.jpg',
+      imageUrls: ['https://example.com/house4.jpg'],
       rating: 4.3,
       isFavorite: false,
+      locality: 'Marseille',
+      city: 'Marseille',
+      state: "Provence-Alpes-Côte d'Azur",
+      pinCode: '13000',
+      houseNo: '29',
+      society: 'Lofts République',
+      latitude: 43.2965,
+      longitude: 5.3698,
+      createdAt: DateTime.now(),
+      publisher: '...', 
     ),
     House(
       id: '5',
@@ -71,15 +113,31 @@ class _HomePageState extends State<HomePage> {
       bedrooms: 5,
       bathrooms: 3,
       surface: 220,
-      imageUrl: 'https://example.com/house5.jpg',
+      imageUrls: ['https://example.com/house5.jpg'],
       rating: 4.9,
       isFavorite: true,
+      locality: 'Chamonix',
+      city: 'Chamonix-Mont-Blanc',
+      state: 'Auvergne-Rhône-Alpes',
+      pinCode: '74400',
+      houseNo: '12',
+      society: 'Chalets des Alpes',
+      latitude: 45.9237,
+      longitude: 6.8694,
+      createdAt: DateTime.now(),
+      publisher: '...', 
     ),
   ];
 
   // Filtres
   String _selectedFilter = 'Tous';
-  final List<String> _filters = ['Tous', 'Populaires', 'Récents', 'Prix bas', 'Prix élevé'];
+  final List<String> _filters = [
+    'Tous',
+    'Populaires',
+    'Récents',
+    'Prix bas',
+    'Prix élevé',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -90,10 +148,7 @@ class _HomePageState extends State<HomePage> {
         elevation: 0,
         title: Text(
           'ImmoLoc',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -150,16 +205,13 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 20),
-            
+
             // Filtres horizontaux
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 'Catégories',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             SizedBox(height: 10),
@@ -185,13 +237,19 @@ class _HomePageState extends State<HomePage> {
                       backgroundColor: Colors.white,
                       checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
-                        color: _selectedFilter == filter ? Colors.white : Colors.black87,
+                        color:
+                            _selectedFilter == filter
+                                ? Colors.white
+                                : Colors.black87,
                         fontWeight: FontWeight.w500,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                         side: BorderSide(
-                          color: _selectedFilter == filter ? accentOrange : Colors.grey.shade300,
+                          color:
+                              _selectedFilter == filter
+                                  ? accentOrange
+                                  : Colors.grey.shade300,
                         ),
                       ),
                     ),
@@ -200,7 +258,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 20),
-            
+
             // Maisons recommandées
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -209,10 +267,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Text(
                     'Maisons recommandées',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   TextButton(
                     onPressed: () {},
@@ -238,7 +293,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             SizedBox(height: 20),
-            
+
             // Maisons à proximité
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -247,10 +302,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Text(
                     'Maisons à proximité',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   TextButton(
                     onPressed: () {},
@@ -305,6 +357,13 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/post-house');
+        },
+        backgroundColor: primaryBlue,
+        child: Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
@@ -315,9 +374,7 @@ class _HomePageState extends State<HomePage> {
       margin: EdgeInsets.only(right: 16),
       child: Card(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -331,11 +388,15 @@ class _HomePageState extends State<HomePage> {
                     width: double.infinity,
                     color: Colors.grey.shade300, // Fallback color
                     child: Image.network(
-                      house.imageUrl,
+                      house.imageUrls.isNotEmpty ? house.imageUrls[0] : '',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Center(
-                          child: Icon(Icons.home, size: 50, color: Colors.grey.shade500),
+                          child: Icon(
+                            Icons.home,
+                            size: 50,
+                            color: Colors.grey.shade500,
+                          ),
                         );
                       },
                     ),
@@ -346,7 +407,9 @@ class _HomePageState extends State<HomePage> {
                   right: 8,
                   child: InkWell(
                     onTap: () {
-                      // Logique pour ajouter/retirer des favoris
+                      setState(() {
+                        house.isFavorite = !house.isFavorite;
+                      });
                     },
                     child: Container(
                       padding: EdgeInsets.all(4),
@@ -355,7 +418,9 @@ class _HomePageState extends State<HomePage> {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        house.isFavorite ? Icons.favorite : Icons.favorite_border,
+                        house.isFavorite
+                            ? Icons.favorite
+                            : Icons.favorite_border,
                         color: house.isFavorite ? Colors.red : Colors.grey,
                         size: 20,
                       ),
@@ -383,29 +448,29 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: 6),
                   Text(
                     house.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4),
                   Text(
                     house.address,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 8),
                   Row(
                     children: [
-                      _featureItem(Icons.king_bed_outlined, '${house.bedrooms}'),
+                      _featureItem(
+                        Icons.king_bed_outlined,
+                        '${house.bedrooms}',
+                      ),
                       SizedBox(width: 16),
-                      _featureItem(Icons.bathtub_outlined, '${house.bathrooms}'),
+                      _featureItem(
+                        Icons.bathtub_outlined,
+                        '${house.bathrooms}',
+                      ),
                       SizedBox(width: 16),
                       _featureItem(Icons.square_foot, '${house.surface} m²'),
                     ],
@@ -438,9 +503,7 @@ class _HomePageState extends State<HomePage> {
     return Card(
       margin: EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Row(
@@ -454,11 +517,15 @@ class _HomePageState extends State<HomePage> {
                 height: 100,
                 color: Colors.grey.shade300, // Fallback color
                 child: Image.network(
-                  house.imageUrl,
+                  house.imageUrls.isNotEmpty ? house.imageUrls[0] : '',
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Center(
-                      child: Icon(Icons.home, size: 40, color: Colors.grey.shade500),
+                      child: Icon(
+                        Icons.home,
+                        size: 40,
+                        color: Colors.grey.shade500,
+                      ),
                     );
                   },
                 ),
@@ -479,16 +546,23 @@ class _HomePageState extends State<HomePage> {
                           SizedBox(width: 4),
                           Text(
                             house.rating.toString(),
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
                           ),
                         ],
                       ),
                       InkWell(
                         onTap: () {
-                          // Logique pour ajouter/retirer des favoris
+                          setState(() {
+                            house.isFavorite = !house.isFavorite;
+                          });
                         },
                         child: Icon(
-                          house.isFavorite ? Icons.favorite : Icons.favorite_border,
+                          house.isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
                           color: house.isFavorite ? Colors.red : Colors.grey,
                           size: 20,
                         ),
@@ -498,29 +572,29 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(height: 4),
                   Text(
                     house.title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 4),
                   Text(
                     house.address,
-                    style: TextStyle(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   SizedBox(height: 8),
                   Row(
                     children: [
-                      _featureItem(Icons.king_bed_outlined, '${house.bedrooms}'),
+                      _featureItem(
+                        Icons.king_bed_outlined,
+                        '${house.bedrooms}',
+                      ),
                       SizedBox(width: 16),
-                      _featureItem(Icons.bathtub_outlined, '${house.bathrooms}'),
+                      _featureItem(
+                        Icons.bathtub_outlined,
+                        '${house.bathrooms}',
+                      ),
                       SizedBox(width: 16),
                       _featureItem(Icons.square_foot, '${house.surface} m²'),
                     ],
@@ -549,13 +623,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         Icon(icon, size: 16, color: Colors.grey.shade600),
         SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
-        ),
+        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
       ],
     );
   }
