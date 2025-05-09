@@ -8,6 +8,6 @@ import '../users/change_password_page.dart';
 
 final Map<String, WidgetBuilder> userRoutes = {
   '/userProfile': (context) => UserProfilePage(), // Sans userData
-  '/user/password/change': (context) => ChangePasswordPage(),
+  '/passwordchange': (context) => ChangePasswordPage(),
 };
 
