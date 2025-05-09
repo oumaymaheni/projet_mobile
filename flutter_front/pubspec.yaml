@@ -39,8 +39,9 @@ dependencies:
   flutter_image: ^4.1.4
   image_picker: ^1.0.4
   http: ^0.13.5
+  provider: ^6.0.0
+  shared_preferences: ^2.0.0
 
-  
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -75,6 +76,7 @@ flutter:
      - assets/images/home.png
      - assets/images/drawer_design2.png
      - assets/images/bleu.png
+     - assets/images/password.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
