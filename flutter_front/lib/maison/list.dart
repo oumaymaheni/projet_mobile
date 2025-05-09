@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/maison_models.dart';
-import '../components/bottom_navigation_widget.dart'; 
+import '../widgets/bottom_navigation_widget.dart'; 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 

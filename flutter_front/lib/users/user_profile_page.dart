@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../theme/theme_provider.dart';
-import '../components/bottom_navigation_widget.dart'; 
+import '../widgets/bottom_navigation_widget.dart'; 
 class UserProfilePage extends StatefulWidget {
   final User? userData;
   const UserProfilePage({Key? key, this.userData}) : super(key: key);

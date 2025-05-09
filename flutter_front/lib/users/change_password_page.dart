@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import '../theme/theme_provider.dart';
-import '../components/bottom_navigation_widget.dart'; 
+import '../widgets/bottom_navigation_widget.dart'; 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({Key? key}) : super(key: key);
 
