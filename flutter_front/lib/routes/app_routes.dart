@@ -4,6 +4,7 @@ import 'authentification.dart';
 import 'maison.dart';
 import 'user.dart'; // <--- Ajout
 import 'post_routes.dart';
+import 'favorites.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -14,11 +15,15 @@ class AppRoutes {
   static const String postHouse = '/post-house';
   static const String myAnnounce = '/my-ads';
   static const String EditmyAnnounce = '/edit-house';
+  static const String favorites ='/favorites';
+
 
   static final routes = <String, WidgetBuilder>{
     ...authRoutes,
     ...maisonRoutes,
     ...userRoutes,
     ...postHouseRoutes,
+    ...favoriteRoute
+
   };
 }

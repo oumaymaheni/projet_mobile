@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_front/maison/favorites.dart';
+import 'package:flutter_front/routes/app_routes.dart';
 import '../models/maison_models.dart';
-import '../maison/post_house.dart';
+import '../widgets/home/app_bar_widget.dart';
+import '../widgets/home/property_list_widget.dart';
+import '../widgets/bottom_navigation_widget.dart';
+import '../services/firebase_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -10,148 +15,139 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Définition des couleurs thématiques
-  final Color primaryBlue = const Color(0xFF1E88E5); // Bleu principal
-  final Color accentOrange = const Color(0xFFFF9800); // Orange accent
-  final Color lightBlue = const Color(0xFFBBDEFB); // Bleu clair pour fond
+  // Theme colors
+  final Color primaryBlue = const Color(0xFF1E88E5);
+  final Color accentOrange = const Color(0xFFFF9800);
+  final Color lightBackground = const Color(0xFFF5F7FA);
+  final Color textDark = const Color(0xFF333333);
+  final Color textLight = const Color(0xFF757575);
 
-  // Liste des maisons à louer (exemple)
-  final List<House> _houses = [
-    House(
-      id: '1',
-      title: 'Villa moderne avec piscine',
-      address: '123 Rue des Fleurs, Paris',
-      price: 1500,
-      bedrooms: 4,
-      bathrooms: 2,
-      surface: 180,
-      imageUrls: ['https://example.com/house1.jpg'],
-      rating: 4.8,
-      isFavorite: false,
-      locality: 'Paris',
-      city: 'Paris',
-      state: 'Île-de-France',
-      pinCode: '75000',
-      houseNo: '123',
-      society: 'Résidence des Fleurs',
-      latitude: 48.8566,
-      longitude: 2.3522,
-      createdAt: DateTime.now(),
-      publisher: '...',
-    ),
-    House(
-      id: '2',
-      title: 'Appartement au centre-ville',
-      address: '45 Avenue Victor Hugo, Lyon',
-      price: 900,
-      bedrooms: 2,
-      bathrooms: 1,
-      surface: 75,
-      imageUrls: ['https://example.com/house2.jpg'],
-      rating: 4.2,
-      isFavorite: true,
-      locality: 'Lyon',
-      city: 'Lyon',
-      state: 'Auvergne-Rhône-Alpes',
-      pinCode: '69000',
-      houseNo: '45',
-      society: 'Résidence Victor Hugo',
-      latitude: 45.7640,
-      longitude: 4.8357,
-      createdAt: DateTime.now(),
-      publisher: '...',
-    ),
-    House(
-      id: '3',
-      title: 'Maison de campagne',
-      address: '8 Chemin des Vignes, Bordeaux',
-      price: 1200,
-      bedrooms: 3,
-      bathrooms: 2,
-      surface: 150,
-      imageUrls: ['https://example.com/house3.jpg'],
-      rating: 4.5,
-      isFavorite: false,
-      locality: 'Bordeaux',
-      city: 'Bordeaux',
-      state: 'Nouvelle-Aquitaine',
-      pinCode: '33000',
-      houseNo: '8',
-      society: 'Domaine des Vignes',
-      latitude: 44.8378,
-      longitude: -0.5792,
-      createdAt: DateTime.now(),
-      publisher: '...',
-    ),
-    House(
-      id: '4',
-      title: 'Loft industriel rénové',
-      address: '29 Rue de la République, Marseille',
-      price: 1100,
-      bedrooms: 2,
-      bathrooms: 1,
-      surface: 95,
-      imageUrls: ['https://example.com/house4.jpg'],
-      rating: 4.3,
-      isFavorite: false,
-      locality: 'Marseille',
-      city: 'Marseille',
-      state: "Provence-Alpes-Côte d'Azur",
-      pinCode: '13000',
-      houseNo: '29',
-      society: 'Lofts République',
-      latitude: 43.2965,
-      longitude: 5.3698,
-      createdAt: DateTime.now(),
-      publisher: '...',
-    ),
-    House(
-      id: '5',
-      title: 'Chalet en montagne',
-      address: '12 Route des Alpes, Chamonix',
-      price: 2000,
-      bedrooms: 5,
-      bathrooms: 3,
-      surface: 220,
-      imageUrls: ['https://example.com/house5.jpg'],
-      rating: 4.9,
-      isFavorite: true,
-      locality: 'Chamonix',
-      city: 'Chamonix-Mont-Blanc',
-      state: 'Auvergne-Rhône-Alpes',
-      pinCode: '74400',
-      houseNo: '12',
-      society: 'Chalets des Alpes',
-      latitude: 45.9237,
-      longitude: 6.8694,
-      createdAt: DateTime.now(),
-      publisher: '...',
-    ),
+  // Property type filters
+  final List<String> _propertyTypes = [
+    'All',
+    'House',
+    'Apartment',
+    'Villa',
+    'Condo',
+    'Studio',
   ];
+  String _selectedPropertyType = 'All';
 
-  // Filtres
-  String _selectedFilter = 'Tous';
-  final List<String> _filters = [
-    'Tous',
-    'Populaires',
-    'Récents',
-    'Prix bas',
-    'Prix élevé',
-  ];
+  // City filter
+  List<String> _cities = ['All'];
+  String _selectedCity = 'All';
+
+  // Houses list from Firebase
+  List<House> _houses = [];
+  bool _isLoading = true;
 
   int _selectedIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    _fetchHouses();
+  }
+
+  Future<void> _fetchHouses() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final houses = await FirebaseService.getHouses();
+      setState(() {
+        _houses = houses;
+        _isLoading = false;
+        _initializeCities();
+      });
+    } catch (e) {
+      print('Error fetching houses: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _initializeCities() {
+    Set<String> uniqueCities = _houses.map((house) => house.city).toSet();
+    List<String> sortedCities = uniqueCities.toList()..sort();
+    _cities = ['All', ...sortedCities];
+    _selectedCity = 'All';
+  }
+
+  void _addHouse(House newHouse) async {
+    await FirebaseService.addHouse(newHouse);
+    _fetchHouses();
+  }
+
+  List<House> get _filteredHouses {
+    return _houses.where((house) {
+      bool matchesPropertyType =
+          _selectedPropertyType == 'All' ||
+          house.propertyType == _selectedPropertyType;
+      bool matchesCity = _selectedCity == 'All' || house.city == _selectedCity;
+      return matchesPropertyType && matchesCity;
+    }).toList();
+  }
+
+  void _onPropertyTypeSelected(String propertyType) {
+    setState(() {
+      _selectedPropertyType = propertyType;
+    });
+  }
+
+  void _onCityChanged(String? newValue) {
+    if (newValue != null) {
+      setState(() {
+        _selectedCity = newValue;
+      });
+    }
+  }
+
+  // void _onBottomNavTapped(int index) {
+  //   setState(() {
+  //     _selectedIndex = index;
+  //   });
+
+  //   switch (index) {
+  //     case 0:
+  //       // Home - reste sur la même page
+  //       break;
+  //     case 1:
+  //       Navigator.pushNamed(context, '/search');
+  //       break;
+  //     case 2:
+  //       Navigator.pushNamed(context, '/favorites');
+  //       break;
+  //     case 3:
+  //       Navigator.pushNamed(context, '/my-ads');
+  //       break;
+  //     case 4:
+  //       Navigator.pushNamed(context, '/userProfile');
+  //       break;
+  //   }
+  // }
   void _onBottomNavTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
 
     switch (index) {
-      case 4:
-        Navigator.pushNamed(context, '/my-ads');
+      case 0:
+        // Home - reste sur la même page
         break;
-      case 5:
-        Navigator.pushNamed(context, '/userProfile');
+      case 1:
+        // Navigator.pushNamed(context, AppRoutes.search);
+        break;
+      case 2:
+        Navigator.pushNamed(context, AppRoutes.favorites);
+        break;
+      case 3:
+        Navigator.pushNamed(context, AppRoutes.myAnnounce);
+        break;
+      case 4:
+        Navigator.pushNamed(context, AppRoutes.userProfile);
         break;
     }
   }
@@ -159,494 +155,327 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightBlue.withOpacity(0.3),
-      appBar: AppBar(
-        backgroundColor: primaryBlue,
-        elevation: 0,
-        title: Text(
-          'ImmoLoc',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: Icon(Icons.person_outline, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // En-tête avec recherche
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              decoration: BoxDecoration(
-                color: primaryBlue,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Trouvez votre\nmaison idéale',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Rechercher une maison',
-                        prefixIcon: Icon(Icons.search, color: primaryBlue),
-                        border: InputBorder.none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Filtres horizontaux
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'Catégories',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(height: 10),
-            SizedBox(
-              height: 40,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                itemCount: _filters.length,
-                itemBuilder: (context, index) {
-                  final filter = _filters[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(filter),
-                      selected: _selectedFilter == filter,
-                      onSelected: (selected) {
-                        setState(() {
-                          _selectedFilter = filter;
-                        });
-                      },
-                      selectedColor: accentOrange,
-                      backgroundColor: Colors.white,
-                      checkmarkColor: Colors.white,
-                      labelStyle: TextStyle(
-                        color:
-                            _selectedFilter == filter
-                                ? Colors.white
-                                : Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color:
-                              _selectedFilter == filter
-                                  ? accentOrange
-                                  : Colors.grey.shade300,
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Maisons recommandées
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Maisons recommandées',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Voir tout',
-                      style: TextStyle(color: accentOrange),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            SizedBox(
-              height: 300,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                itemCount: _houses.length,
-                itemBuilder: (context, index) {
-                  final house = _houses[index];
-                  return _featuredHouseCard(house);
-                },
-              ),
-            ),
-            SizedBox(height: 20),
-
-            // Maisons à proximité
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Maisons à proximité',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'Voir tout',
-                      style: TextStyle(color: accentOrange),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 10),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _houses.length,
-              itemBuilder: (context, index) {
-                final house = _houses[index];
-                return _houseListItem(house);
-              },
-            ),
-            SizedBox(height: 20),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
+      backgroundColor: lightBackground,
+      appBar:
+          _selectedIndex == 0
+              ? HomeAppBar(
+                selectedCity: _selectedCity,
+                cities: _cities,
+                onCityChanged: _onCityChanged,
+                textDark: textDark,
+                isFavoritesTab: false,
+              )
+              : null,
+      body: _selectedIndex == 0 ? _buildHomeContent() : Container(),
+      bottomNavigationBar: HomeBottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onBottomNavTapped,
-        selectedItemColor: primaryBlue,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Accueil',
+        primaryBlue: primaryBlue,
+      ),
+      floatingActionButton:
+          _selectedIndex == 0 ? _buildFloatingActionButton() : null,
+    );
+  }
+
+  Widget _buildHomeContent() {
+    if (_isLoading) {
+      return Center(child: CircularProgressIndicator(color: primaryBlue));
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 16),
+          const Text(
+            'Find Your Dream Home',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF333333),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Rechercher',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border),
-            label: 'Favoris',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.message_outlined),
-            label: 'Messages',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt), // Nouvelle icône pour Mes Annonces
-            label: 'Mes Annonces',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profil',
-          ),
+          const SizedBox(height: 12),
+
+          _filteredHouses.isEmpty
+              ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 30.0),
+                  child: Text(
+                    'No properties found',
+                    style: TextStyle(color: textLight, fontSize: 16),
+                  ),
+                ),
+              )
+              : PropertyListView(houses: _filteredHouses, textDark: textDark),
+          const SizedBox(height: 80),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/post-house');
-        },
-        backgroundColor: primaryBlue,
-        child: Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 
-  // Widget pour une carte de maison dans la section "recommandées"
-  Widget _featuredHouseCard(House house) {
-    return Container(
-      width: 240,
-      margin: EdgeInsets.only(right: 16),
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image de la maison
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                  child: Container(
-                    height: 150,
-                    width: double.infinity,
-                    color: Colors.grey.shade300, // Fallback color
-                    child: Image.network(
-                      house.imageUrls.isNotEmpty ? house.imageUrls[0] : '',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: Icon(
-                            Icons.home,
-                            size: 50,
-                            color: Colors.grey.shade500,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: InkWell(
-                    onTap: () {
-                      setState(() {
-                        house.isFavorite = !house.isFavorite;
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        house.isFavorite
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: house.isFavorite ? Colors.red : Colors.grey,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // Informations de la maison
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.star, color: Colors.amber, size: 18),
-                      SizedBox(width: 4),
-                      Text(
-                        house.rating.toString(),
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    house.title,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    house.address,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _featureItem(
-                        Icons.king_bed_outlined,
-                        '${house.bedrooms}',
-                      ),
-                      SizedBox(width: 16),
-                      _featureItem(
-                        Icons.bathtub_outlined,
-                        '${house.bathrooms}',
-                      ),
-                      SizedBox(width: 16),
-                      _featureItem(Icons.square_foot, '${house.surface} m²'),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${house.price} €/mois',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: primaryBlue,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Widget pour un item de maison dans la liste "à proximité"
-  Widget _houseListItem(House house) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image de la maison
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Container(
-                width: 100,
-                height: 100,
-                color: Colors.grey.shade300, // Fallback color
-                child: Image.network(
-                  house.imageUrls.isNotEmpty ? house.imageUrls[0] : '',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Center(
-                      child: Icon(
-                        Icons.home,
-                        size: 40,
-                        color: Colors.grey.shade500,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            SizedBox(width: 12),
-            // Informations de la maison
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.star, color: Colors.amber, size: 16),
-                          SizedBox(width: 4),
-                          Text(
-                            house.rating.toString(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                      InkWell(
-                        onTap: () {
-                          setState(() {
-                            house.isFavorite = !house.isFavorite;
-                          });
-                        },
-                        child: Icon(
-                          house.isFavorite
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                          color: house.isFavorite ? Colors.red : Colors.grey,
-                          size: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    house.title,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    house.address,
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      _featureItem(
-                        Icons.king_bed_outlined,
-                        '${house.bedrooms}',
-                      ),
-                      SizedBox(width: 16),
-                      _featureItem(
-                        Icons.bathtub_outlined,
-                        '${house.bathrooms}',
-                      ),
-                      SizedBox(width: 16),
-                      _featureItem(Icons.square_foot, '${house.surface} m²'),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    '${house.price} €/mois',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: primaryBlue,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Widget pour les caractéristiques de la maison (icône + texte)
-  Widget _featureItem(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey.shade600),
-        SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-      ],
+  FloatingActionButton _buildFloatingActionButton() {
+    return FloatingActionButton(
+      onPressed: () {
+        Navigator.pushNamed(context, '/post-house').then((newHouse) {
+          if (newHouse != null && newHouse is House) {
+            _addHouse(newHouse);
+          }
+        });
+      },
+      backgroundColor: primaryBlue,
+      child: const Icon(Icons.add, color: Colors.white),
     );
   }
 }
+
+// import 'package:flutter/material.dart';
+// import '../models/maison_models.dart';
+// import '../maison/favorites.dart';
+// import '../widgets/home/app_bar_widget.dart';
+// import '../widgets/home/property_list_widget.dart';
+// import '../widgets/bottom_navigation_widget.dart';
+// import '../services/firebase_service.dart'; // Import your Firebase service
+
+// class HomePage extends StatefulWidget {
+//   const HomePage({Key? key}) : super(key: key);
+
+//   @override
+//   State createState() => _HomePageState();
+// }
+
+// class _HomePageState extends State<HomePage> {
+//   // Theme colors
+//   final Color primaryBlue = const Color(0xFF1E88E5);
+//   final Color accentOrange = const Color(0xFFFF9800);
+//   final Color lightBackground = const Color(0xFFF5F7FA);
+//   final Color textDark = const Color(0xFF333333);
+//   final Color textLight = const Color(0xFF757575);
+
+//   // Current tab index
+//   int _currentIndex = 0;
+
+//   // Property type filters
+//   final List<String> _propertyTypes = [
+//     'All',
+//     'House',
+//     'Apartment',
+//     'Villa',
+//     'Condo',
+//     'Studio',
+//   ];
+//   String _selectedPropertyType = 'All';
+
+//   // City filter
+//   List<String> _cities = ['All'];
+//   String _selectedCity = 'All';
+
+//   // Houses list from Firebase
+//   List<House> _houses = [];
+//   bool _isLoading = true;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _fetchHouses();
+//   }
+
+//   // Fetch houses from Firebase
+//   Future<void> _fetchHouses() async {
+//     setState(() {
+//       _isLoading = true;
+//     });
+
+//     try {
+//       final houses = await FirebaseService.getHouses();
+
+//       setState(() {
+//         _houses = houses;
+//         _isLoading = false;
+//         _initializeCities();
+//       });
+//     } catch (e) {
+//       print('Error fetching houses: $e');
+//       setState(() {
+//         _isLoading = false;
+//       });
+//     }
+//   }
+
+//   // Method to extract unique cities from houses
+//   void _initializeCities() {
+//     // Extract unique city names
+//     Set<String> uniqueCities = _houses.map((house) => house.city).toSet();
+//     // Convert to list and sort alphabetically
+//     List<String> sortedCities = uniqueCities.toList()..sort();
+//     // Add 'All' at the beginning
+//     _cities = ['All', ...sortedCities];
+//     // Set default selected city
+//     _selectedCity = 'All';
+//   }
+
+//   // Add a house and update city filters
+//   void _addHouse(House newHouse) async {
+//     // Add house to Firebase first
+//     await FirebaseService.addHouse(newHouse);
+//     // Then refresh houses from Firebase
+//     _fetchHouses();
+//   }
+
+
+//   // Modified to filter by both property type and city
+//   List<House> get _filteredHouses {
+//     return _houses.where((house) {
+//       // Apply property type filter
+//       bool matchesPropertyType =
+//           _selectedPropertyType == 'All' ||
+//           house.propertyType == _selectedPropertyType;
+
+//       // Apply city filter
+//       bool matchesCity = _selectedCity == 'All' || house.city == _selectedCity;
+
+//       // Return houses that match both filters
+//       return matchesPropertyType && matchesCity;
+//     }).toList();
+//   }
+
+//   // Handle bottom navigation tap
+//   void _onNavTap(int index) {
+//     setState(() {
+//       _currentIndex = index;
+//     });
+//     // Handle special navigation cases
+//     if (index == 4) {
+//       // Profile tab index
+//       Navigator.pushNamed(context, '/userProfile');
+//     }
+//   }
+
+//   // Handle property type filter selection
+//   void _onPropertyTypeSelected(String propertyType) {
+//     setState(() {
+//       _selectedPropertyType = propertyType;
+//     });
+//   }
+
+//   // Handle city filter selection
+//   void _onCityChanged(String? newValue) {
+//     if (newValue != null) {
+//       setState(() {
+//         _selectedCity = newValue;
+//       });
+//     }
+//   }
+
+//   int _selectedIndex = 0;
+
+//   void _onBottomNavTapped(int index) {
+//     setState(() {
+//       _selectedIndex = index;
+//     });
+
+//     switch (index) {
+//       case 4:
+//         Navigator.pushNamed(context, '/my-ads');
+//         break;
+//       case 5:
+//         Navigator.pushNamed(context, '/userProfile');
+//         break;
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     // Define pages to show based on current index
+//     final List<Widget> _pages = [
+//       _buildHomeContent(),
+//       const Center(child: Text('Search Page')),
+//       // FavoritesScreen(houses: _houses, onToggleFavorite: _toggleFavorite),
+//       const Center(child: Text('Messages Page')),
+//       const Center(child: Text('Profile Page')),
+//     ];
+
+//     return Scaffold(
+//       backgroundColor: lightBackground,
+//       appBar: HomeAppBar(
+//         selectedCity: _selectedCity,
+//         cities: _cities,
+//         onCityChanged: _onCityChanged,
+//         textDark: textDark,
+//         isFavoritesTab: _currentIndex == 2,
+//       ),
+//       body: _pages[_currentIndex],
+//       bottomNavigationBar: HomeBottomNavigationBar(
+//         currentIndex: _currentIndex,
+//         onTap: _onNavTap,
+//         primaryBlue: primaryBlue,
+//       ),
+//       floatingActionButton:
+//           _currentIndex == 0 ? _buildFloatingActionButton() : null,
+//     );
+//   }
+
+//   // Home content widget
+//   Widget _buildHomeContent() {
+//     if (_isLoading) {
+//       return Center(child: CircularProgressIndicator(color: primaryBlue));
+//     }
+
+//     return SingleChildScrollView(
+//       padding: const EdgeInsets.symmetric(horizontal: 16.0),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           const SizedBox(height: 16),
+
+//           // Title text
+//           const Text(
+//             'Find Your Dream Home',
+//             style: TextStyle(
+//               fontSize: 24,
+//               fontWeight: FontWeight.bold,
+//               color: Color(0xFF333333),
+//             ),
+//           ),
+//           const SizedBox(height: 12),
+
+//           // Show message if no houses
+//           _filteredHouses.isEmpty
+//               ? Center(
+//                 child: Padding(
+//                   padding: const EdgeInsets.symmetric(vertical: 30.0),
+//                   child: Text(
+//                     'No properties found',
+//                     style: TextStyle(color: textLight, fontSize: 16),
+//                   ),
+//                 ),
+//               )
+//               : PropertyListView(
+//                 houses: _filteredHouses,
+//                 // onToggleFavorite: _toggleFavorite,
+//                 textDark: textDark,
+//               ),
+//           const SizedBox(height: 80), // Add space at bottom for FAB
+//         ],
+//       ),
+//     );
+//   }
+
+//   FloatingActionButton _buildFloatingActionButton() {
+//     return FloatingActionButton(
+//       onPressed: () {
+//         // Use the original navigation approach with the named route
+//         Navigator.pushNamed(context, '/post-house').then((newHouse) {
+//           // Check if we got a new house back
+//           if (newHouse != null && newHouse is House) {
+//             // When a new house is added, update our Firebase and list
+//             _addHouse(newHouse);
+//           }
+//         });
+//       },
+//       backgroundColor: primaryBlue,
+//       child: const Icon(Icons.add, color: Colors.white),
+//     );
+//   }
+// }
