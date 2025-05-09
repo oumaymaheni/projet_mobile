@@ -56,47 +56,51 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _login() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+ Future<void> _login() async {
+  if (_formKey.currentState!.validate()) {
+    setState(() {
+      _isLoading = true;
+    });
 
-      try {
-        UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      await createUserInFirestore(userCredential.user!);
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Erreur de connexion';
+      if (e.code == 'user-not-found') {
+        errorMessage = 'Aucun utilisateur trouvé pour cet email';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'Votre mot de passe est incorrect'; // Message modifié ici
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Email invalide';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3), // Durée d'affichage du message
+          ),
         );
-
-        await createUserInFirestore(userCredential.user!);
-
-        if (mounted) {
-          Navigator.pushReplacementNamed(context, '/home');
-        }
-      } on FirebaseAuthException catch (e) {
-        String errorMessage = 'Erreur de connexion';
-        if (e.code == 'user-not-found') {
-          errorMessage = 'Aucun utilisateur trouvé pour cet email';
-        } else if (e.code == 'wrong-password') {
-          errorMessage = 'Mot de passe incorrect';
-        } else if (e.code == 'invalid-email') {
-          errorMessage = 'Email invalide';
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
+}
 
   Future<void> _signInWithGoogle() async {
     try {
