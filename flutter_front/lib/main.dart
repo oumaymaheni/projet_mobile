@@ -4,13 +4,16 @@ import 'firebase_options.dart';
 import 'routes/app_routes.dart';
 import 'package:provider/provider.dart';
 import 'theme/theme_provider.dart'; // Chemin corrigé
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setUrlStrategy(PathUrlStrategy()); // <-- Ajout important
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),

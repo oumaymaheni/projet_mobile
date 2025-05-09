@@ -148,7 +148,7 @@ class _RegisterPageState extends State<RegisterPage> {
         child: SingleChildScrollView(
           child: Center(
             child: Padding(
-              padding: const EdgeInsets.all(5.0),
+              padding: const EdgeInsets.all(20.0),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -160,7 +160,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       height: 180,
                       fit: BoxFit.contain,
                     ),
-                    const SizedBox(height: 1),
+                    const SizedBox(height: 8),
                     Text(
                       'Créer un compte',
                       style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: primaryBlue),
