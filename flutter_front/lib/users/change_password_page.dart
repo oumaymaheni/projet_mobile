@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import '../theme/theme_provider.dart';
-
+import '../components/bottom_navigation_widget.dart'; 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({Key? key}) : super(key: key);
 
@@ -16,6 +16,34 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  int _selectedIndex = 0;
+
+  // Navigation BottomNavBar
+  void _onItemTapped(int index) {
+    
+
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushReplacementNamed(context, '/home');
+        break;
+      case 1:
+        Navigator.pushReplacementNamed(context, '/search');
+        break;
+      case 2:
+        Navigator.pushReplacementNamed(context, '/favorites');
+        break;
+      case 3:
+        Navigator.pushReplacementNamed(context, '/messages');
+        break;
+      case 4:
+        Navigator.pushReplacementNamed(context, '/userProfile');
+        break;
+    }
+  }
 
   // Couleurs adaptées au thème via ThemeProvider
   Color get primaryBlue {
@@ -144,23 +172,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
 
-    return Scaffold(
-      backgroundColor: backgroundWhite,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: primaryBlue),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Changer le mot de passe',
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+   return Scaffold(
+  backgroundColor: backgroundWhite,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -315,6 +328,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           ],
         ),
       ),
-    );
+     bottomNavigationBar: HomeBottomNavigationBar(
+  currentIndex: _selectedIndex,
+  onTap: _onItemTapped,
+  primaryBlue: primaryBlue,
+),
+   );
   }
 }

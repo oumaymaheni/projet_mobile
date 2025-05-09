@@ -8,7 +8,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../theme/theme_provider.dart';
-
+import '../components/bottom_navigation_widget.dart'; 
 class UserProfilePage extends StatefulWidget {
   final User? userData;
   const UserProfilePage({Key? key, this.userData}) : super(key: key);
@@ -174,29 +174,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDarkMode = themeProvider.isDarkMode;
+ @override
+Widget build(BuildContext context) {
+  final themeProvider = Provider.of<ThemeProvider>(context);
+  final isDarkMode = themeProvider.isDarkMode;
 
-    if (_user == null) {
-      return Scaffold(
-        backgroundColor: backgroundWhite,
-        body: Center(child: CircularProgressIndicator(color: primaryBlue)),
-      );
-    }
-
+  if (_user == null) {
     return Scaffold(
       backgroundColor: backgroundWhite,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: primaryBlue),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SingleChildScrollView(
+      body: Center(child: CircularProgressIndicator(color: primaryBlue)),
+    );
+  }
+
+  return Scaffold(
+    backgroundColor: backgroundWhite,
+    
+    body: Padding(
+      padding: const EdgeInsets.only(bottom: kBottomNavigationBarHeight), // Ajouté pour l'espace
+      child: SingleChildScrollView(
         child: Column(
           children: [
             _buildProfileHeader(),
@@ -204,11 +199,38 @@ class _UserProfilePageState extends State<UserProfilePage> {
             _buildPersonalInformationCard(),
             const SizedBox(height: 20),
             _buildOptionsMenu(),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20), // Espace réduit
           ],
         ),
       ),
-    );
+    ),
+   bottomNavigationBar: HomeBottomNavigationBar(
+  currentIndex: 4,  // Profil est à l'index 4
+    primaryBlue: primaryBlue,
+      onTap: (int index) {
+        // Navigue selon l'index sélectionné
+        switch (index) {
+          case 0:
+            Navigator.pushReplacementNamed(context, '/home');
+            break;
+          case 1:
+            Navigator.pushReplacementNamed(context, '/search');
+            break;
+          case 2:
+            Navigator.pushReplacementNamed(context, '/favorites');
+            break;
+          case 3:
+            Navigator.pushReplacementNamed(context, '/messages');
+            break;
+          case 4:
+            // Déjà sur la page profil, ne rien faire
+            break;
+        }
+      },
+    ),
+  );
+
+
   }
 Widget _buildProfileHeader() {
   return Column(
@@ -358,7 +380,7 @@ Widget _buildProfileHeader() {
             ],
           ),
           const Divider(height: 25),
-          _buildEditableRow(Icons.person, 'Nom complet', _nameController),
+          _buildEditableRow(Icons.person, 'Nom et Prénom', _nameController),
           const SizedBox(height: 16),
           _buildStaticRow(Icons.email, 'Email', _user!.email),
           const SizedBox(height: 16),
@@ -473,9 +495,9 @@ Widget _buildEditableRow(IconData icon, String label, TextEditingController cont
             icon: Icons.security,
             title: 'Sécurité',
             subtitle: 'Modifiez votre mot de passe',
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => ChangePasswordPage()));
-            },
+           onTap: () {
+    Navigator.pushReplacementNamed(context, '/passwordchange');
+  },
           ),
           Divider(height: 1, color: Colors.grey.withOpacity(0.3)),
           _buildListTile(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/maison_models.dart';
-
+import '../components/bottom_navigation_widget.dart'; 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
 
@@ -77,20 +77,11 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onBottomNavTapped,
-        selectedItemColor: primaryBlue,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: 'Accueil'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Rechercher'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite_border), label: 'Favoris'),
-          BottomNavigationBarItem(icon: Icon(Icons.message_outlined), label: 'Messages'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profil'),
-        ],
-      ),
+bottomNavigationBar: HomeBottomNavigationBar(
+  currentIndex: _selectedIndex,
+  onTap: _onBottomNavTapped, // Changer _onItemTapped en _onBottomNavTapped
+  primaryBlue: primaryBlue,
+),
     );
   }
 
