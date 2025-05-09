@@ -168,6 +168,18 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  int _selectedIndex = 0;
+
+  void _onBottomNavTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    if (index == 4) {
+      Navigator.pushNamed(context, '/userProfile');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Define pages to show based on current index
