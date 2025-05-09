@@ -14,36 +14,44 @@ class House {
   final String locality;
   final String city;
   final String state;
-  final String? pinCode; // Rend le champ optionnel
+  final String? pinCode;
   final String houseNo;
   final String society;
   final double latitude;
   final double longitude;
   final DateTime createdAt;
-  final String publisher; // Ajout du champ publisher
+  final String publisher;
+  final String propertyType;
+  final String description;
 
-  House({
-    required this.id,
-    required this.title,
-    required this.address,
-    required this.price,
-    required this.bedrooms,
-    required this.bathrooms,
-    required this.surface,
-    required this.imageUrls,
-    required this.rating,
-    required this.isFavorite,
-    required this.locality,
-    required this.city,
-    required this.state,
-    this.pinCode, // Maintenant optionnel
-    required this.houseNo,
-    required this.society,
-    required this.latitude,
-    required this.longitude,
-    required this.createdAt,
-    required this.publisher, // Champ requis
-  });
+
+ House({
+  required this.id,
+  required this.title,
+  required this.address,
+  required this.price,
+  required this.bedrooms,
+  required this.bathrooms,
+  required this.surface,
+  required this.imageUrls,
+  required this.rating,
+  required this.isFavorite,
+  required this.locality,
+  required this.city,
+  required this.state,
+  this.pinCode,
+  required this.houseNo,
+  required this.society,
+  required this.latitude,
+  required this.longitude,
+  required this.createdAt,
+  required this.publisher,
+  this.propertyType = 'House',
+
+  this.description = '',
+
+});
+
 
   factory House.fromMap(String id, Map<String, dynamic> data) {
     return House(
@@ -67,6 +75,9 @@ class House {
       longitude: (data['location']?['_longitude'] ?? 0.0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       publisher: data['publisher'] ?? '',
+      propertyType: data['propertyType'] ?? 'House',
+      description: data['description'] ?? '',
+
     );
   }
 
@@ -93,6 +104,62 @@ class House {
       },
       'createdAt': Timestamp.fromDate(createdAt),
       'publisher': publisher,
+      'propertyType': propertyType,
+
+      // Nouveaux champs
+      'description': description,
     };
   }
+
+  House copyWith({
+  String? id,
+  String? title,
+  String? address,
+  int? price,
+  int? bedrooms,
+  int? bathrooms,
+  int? surface,
+  List<String>? imageUrls,
+  double? rating,
+  bool? isFavorite,
+  String? locality,
+  String? city,
+  String? state,
+  String? pinCode,
+  String? houseNo,
+  String? society,
+  double? latitude,
+  double? longitude,
+  DateTime? createdAt,
+  String? publisher,
+  String? propertyType,
+  String? description,
+}) {
+  return House(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    address: address ?? this.address,
+    price: price ?? this.price,
+    bedrooms: bedrooms ?? this.bedrooms,
+    bathrooms: bathrooms ?? this.bathrooms,
+    surface: surface ?? this.surface,
+    imageUrls: imageUrls ?? this.imageUrls,
+    rating: rating ?? this.rating,
+    isFavorite: isFavorite ?? this.isFavorite,
+    locality: locality ?? this.locality,
+    city: city ?? this.city,
+    state: state ?? this.state,
+    pinCode: pinCode ?? this.pinCode,
+    houseNo: houseNo ?? this.houseNo,
+    society: society ?? this.society,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    createdAt: createdAt ?? this.createdAt,
+    publisher: publisher ?? this.publisher,
+    propertyType: propertyType ?? this.propertyType,
+    description: description ?? this.description,
+  );
 }
+
+}
+

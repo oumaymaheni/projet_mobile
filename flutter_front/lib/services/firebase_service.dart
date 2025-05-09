@@ -26,4 +26,16 @@ class FirebaseService {
   static Future<void> deleteHouse(String id) async {
     await _houseRef.doc(id).delete();
   }
+  
+  static Future<void> updateHouseFavoriteStatus(String houseId, bool isFavorite) async {
+  try {
+    await _houseRef.doc(houseId).update({'isFavorite': isFavorite});
+    print('Favorite status updated successfully');
+  } catch (e) {
+    print('Error updating favorite status: $e');
+    throw e;
+  }
 }
+
+}
+
