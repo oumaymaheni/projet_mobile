@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
       latitude: 48.8566,
       longitude: 2.3522,
       createdAt: DateTime.now(),
-      publisher: '...', 
+      publisher: '...',
     ),
     House(
       id: '2',
@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
       latitude: 45.7640,
       longitude: 4.8357,
       createdAt: DateTime.now(),
-      publisher: '...', 
+      publisher: '...',
     ),
     House(
       id: '3',
@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
       latitude: 44.8378,
       longitude: -0.5792,
       createdAt: DateTime.now(),
-      publisher: '...', 
+      publisher: '...',
     ),
     House(
       id: '4',
@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
       latitude: 43.2965,
       longitude: 5.3698,
       createdAt: DateTime.now(),
-      publisher: '...', 
+      publisher: '...',
     ),
     House(
       id: '5',
@@ -125,7 +125,7 @@ class _HomePageState extends State<HomePage> {
       latitude: 45.9237,
       longitude: 6.8694,
       createdAt: DateTime.now(),
-      publisher: '...', 
+      publisher: '...',
     ),
   ];
 
@@ -146,8 +146,13 @@ class _HomePageState extends State<HomePage> {
       _selectedIndex = index;
     });
 
-    if (index == 4) {
-      Navigator.pushNamed(context, '/userProfile');
+    switch (index) {
+      case 4:
+        Navigator.pushNamed(context, '/my-ads');
+        break;
+      case 5:
+        Navigator.pushNamed(context, '/userProfile');
+        break;
     }
   }
 
@@ -342,7 +347,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-      currentIndex: _selectedIndex,
+        currentIndex: _selectedIndex,
         onTap: _onBottomNavTapped,
         selectedItemColor: primaryBlue,
         unselectedItemColor: Colors.grey,
@@ -363,6 +368,10 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.message_outlined),
             label: 'Messages',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list_alt), // Nouvelle icône pour Mes Annonces
+            label: 'Mes Annonces',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

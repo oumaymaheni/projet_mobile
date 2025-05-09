@@ -5,10 +5,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:uuid/uuid.dart';
 import '../models/maison_models.dart';
 import '../services/firebase_service.dart';
-import '../widgets/post_form.dart';
 import '../widgets/map_picker.dart';
 import '../widgets/image_picker_grid.dart';
-import 'form_section.dart';
 
 class PostHouseScreen extends StatefulWidget {
   const PostHouseScreen({super.key});
@@ -19,13 +17,11 @@ class PostHouseScreen extends StatefulWidget {
 
 class _PostHouseScreenState extends State<PostHouseScreen> {
   final _formKey = GlobalKey<FormState>();
-
   final titleController = TextEditingController();
   final priceController = TextEditingController();
   final surfaceController = TextEditingController();
   final bedroomsController = TextEditingController();
   final bathroomsController = TextEditingController();
-
   final localityController = TextEditingController();
   final cityController = TextEditingController();
   final stateController = TextEditingController();
@@ -35,10 +31,38 @@ class _PostHouseScreenState extends State<PostHouseScreen> {
   final user = FirebaseAuth.instance.currentUser;
 
   final kBlueColor = Colors.blue.shade700;
-
-  List<String> _imageUrls = []; // Store image URLs directly
+  List<String> _imageUrls = [];
   LatLng? _pickedLocation;
   bool _isSubmitting = false;
+
+  Widget _buildStyledField(
+    String label,
+    TextEditingController controller, {
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+    bool required = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        validator: validator ?? (required 
+          ? (val) => val == null || val.isEmpty ? 'Requis' : null 
+          : null),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: kBlueColor),
+          focusedBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: kBlueColor, width: 2),
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(color: Colors.grey.shade400),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _submit() async {
     if (!_formKey.currentState!.validate()) {
@@ -65,7 +89,6 @@ class _PostHouseScreenState extends State<PostHouseScreen> {
     setState(() => _isSubmitting = true);
     
     try {
-      final houseId = const Uuid().v4();
       final house = House(
         id: const Uuid().v4(),
         title: titleController.text,
@@ -87,16 +110,17 @@ class _PostHouseScreenState extends State<PostHouseScreen> {
         latitude: _pickedLocation!.latitude,
         longitude: _pickedLocation!.longitude,
         createdAt: DateTime.now(),
-        publisher: user?.uid ?? 'unknown', // Gestion du cas null
+        publisher: user?.uid ?? 'unknown',
       );
+      
       await FirebaseService.addHouse(house);
       
       if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Maison publiée avec succès')),
-      );
-}
+        Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Maison publiée avec succès')),
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -110,7 +134,10 @@ class _PostHouseScreenState extends State<PostHouseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Publier une Maison")),
+      appBar: AppBar(
+        title: const Text("Publier une Maison"),
+        elevation: 0,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -119,60 +146,171 @@ class _PostHouseScreenState extends State<PostHouseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextFormField(
-                  controller: titleController,
-                  decoration: const InputDecoration(labelText: "Titre de l'annonce"),
-                  validator: (val) => val == null || val.isEmpty ? 'Requis' : null,
+                // Section Informations principales
+                Card(
+                  elevation: 3,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'INFORMATIONS PRINCIPALES',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: kBlueColor,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildStyledField(
+                          "Titre de l'annonce*",
+                          titleController,
+                          required: true,
+                        ),
+                        _buildStyledField(
+                          "Prix*",
+                          priceController,
+                          keyboardType: TextInputType.number,
+                          required: true,
+                        ),
+                        _buildStyledField(
+                          "Surface (m²)*",
+                          surfaceController,
+                          keyboardType: TextInputType.number,
+                          required: true,
+                        ),
+                        _buildStyledField(
+                          "Chambres*",
+                          bedroomsController,
+                          keyboardType: TextInputType.number,
+                          required: true,
+                        ),
+                        _buildStyledField(
+                          "Salles de bain*",
+                          bathroomsController,
+                          keyboardType: TextInputType.number,
+                          required: true,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 10),
-                TextFormField(
-                  controller: priceController,
-                  decoration: const InputDecoration(labelText: "Prix"),
-                  keyboardType: TextInputType.number,
-                  validator: (val) => val == null || val.isEmpty ? 'Requis' : null,
+
+                // Section Adresse
+                Card(
+                  elevation: 3,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ADRESSE',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: kBlueColor,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _buildStyledField('N° de maison*', houseNoController, required: true),
+                        _buildStyledField('Nom de la société', societyController),
+                        _buildStyledField('Quartier*', localityController, required: true),
+                        _buildStyledField('Ville*', cityController, required: true),
+                        _buildStyledField('État*', stateController, required: true),
+                        _buildStyledField(
+                          'Code postal',
+                          pinCodeController,
+                          keyboardType: TextInputType.number,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                TextFormField(
-                  controller: surfaceController,
-                  decoration: const InputDecoration(labelText: "Surface (m²)"),
-                  keyboardType: TextInputType.number,
-                  validator: (val) => val == null || val.isEmpty ? 'Requis' : null,
+
+                // Section Carte
+                Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'EMPLACEMENT SUR LA CARTE*',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: kBlueColor,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text('Sélectionnez l\'emplacement exact sur la carte'),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          height: 200,
+                          child: MapPicker(
+                            onLocationPicked: (pos) => _pickedLocation = pos,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                TextFormField(
-                  controller: bedroomsController,
-                  decoration: const InputDecoration(labelText: "Chambres"),
-                  keyboardType: TextInputType.number,
-                  validator: (val) => val == null || val.isEmpty ? 'Requis' : null,
-                ),
-                TextFormField(
-                  controller: bathroomsController,
-                  decoration: const InputDecoration(labelText: "Salles de bain"),
-                  keyboardType: TextInputType.number,
-                  validator: (val) => val == null || val.isEmpty ? 'Requis' : null,
-                ),
+
                 const SizedBox(height: 16),
-                PostForm(
-                  localityController: localityController,
-                  cityController: cityController,
-                  stateController: stateController,
-                  pinCodeController: pinCodeController,
-                  houseNoController: houseNoController,
-                  societyController: societyController,
+
+                // Section Images
+                Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'IMAGES*',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: kBlueColor,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ImagePickerGrid(
+                          onImagesPicked: (List<String> imageUrls) {
+                            setState(() {
+                              _imageUrls = imageUrls;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                MapPicker(
-                  onLocationPicked: (pos) => _pickedLocation = pos,
-                ),
-                const SizedBox(height: 16),
-                ImagePickerGrid(
-                  onImagesPicked: (List<String> imageUrls) {
-                    setState(() {
-                      _imageUrls = imageUrls;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
+
+                const SizedBox(height: 24),
+
+                // Bouton de soumission
                 Center(
                   child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: kBlueColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                     onPressed: _isSubmitting ? null : _submit,
                     child: _isSubmitting 
                       ? const Row(
@@ -181,16 +319,27 @@ class _PostHouseScreenState extends State<PostHouseScreen> {
                             SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             ),
                             SizedBox(width: 10),
-                            Text("Publication en cours..."),
+                            Text(
+                              "Publication en cours...",
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ],
                         )
-                      : const Text("Publier la maison"),
+                      : const Text(
+                          "PUBLIER LA MAISON",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                   ),
                 ),
-                const SizedBox(height: 24),
               ],
             ),
           ),
@@ -199,3 +348,4 @@ class _PostHouseScreenState extends State<PostHouseScreen> {
     );
   }
 }
+
