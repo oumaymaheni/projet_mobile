@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/maison_models.dart';
 import '../maison/favorites.dart';
 import '../widgets/home/app_bar_widget.dart';
-import '../widgets/home/filter_chips_widget.dart';
 import '../widgets/home/property_list_widget.dart';
 import '../widgets/bottom_navigation_widget.dart';
 import '../services/firebase_service.dart'; // Import your Firebase service
@@ -223,15 +222,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 12),
-
-          // Filter chips row
-          PropertyFilterChips(
-            propertyTypes: _propertyTypes,
-            selectedPropertyType: _selectedPropertyType,
-            onPropertyTypeSelected: _onPropertyTypeSelected,
-            textLight: textLight,
-          ),
-          const SizedBox(height: 20),
 
           // Show message if no houses
           _filteredHouses.isEmpty
