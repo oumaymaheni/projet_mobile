@@ -49,6 +49,8 @@ dependencies:
   url_launcher: ^6.1.11
 
   # http: ^0.13.5
+  geocoding: ^2.1.0
+  flutter_typeahead: ^4.1.0
   provider: ^6.1.1
 
  

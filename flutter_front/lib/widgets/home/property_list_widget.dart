@@ -4,17 +4,18 @@ import '../../maison/house_details.dart';
 
 class PropertyListView extends StatelessWidget {
   final List<House> houses;
-  final Function(House) onToggleFavorite;
+  final Function(House)? onToggleFavorite;
   final Color textDark;
 
   const PropertyListView({
     Key? key,
     required this.houses,
-    required this.onToggleFavorite,
+    this.onToggleFavorite ,
     required this.textDark,
   }) : super(key: key);
 
   @override
+    @override
   Widget build(BuildContext context) {
     if (houses.isEmpty) {
       return Center(
@@ -53,7 +54,6 @@ class PropertyListView extends StatelessWidget {
         final house = houses[index];
         return GestureDetector(
           onTap: () {
-            // Navigate to the detail page when card is tapped
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -70,18 +70,18 @@ class PropertyListView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Property Image with Favorite Button
                 Stack(
                   children: [
                     ClipRRect(
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                       child: _buildPropertyImage(house),
                     ),
+                    if (onToggleFavorite != null) // Affiche le bouton seulement si la fonction existe
                     Positioned(
                       top: 8,
                       right: 8,
                       child: InkWell(
-                        onTap: () => onToggleFavorite(house),
+                        onTap: () => onToggleFavorite!(house), // Utilisation de ! car on a vérifié non null
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
@@ -99,13 +99,11 @@ class PropertyListView extends StatelessWidget {
                   ],
                 ),
                 
-                // Property Details
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Price
                       Text(
                         '${house.price.toStringAsFixed(0)} Dt/Mois',
                         style: TextStyle(
@@ -116,7 +114,6 @@ class PropertyListView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       
-                      // Address
                       Text(
                         '${house.title}, ${house.address}',
                         style: TextStyle(
@@ -128,7 +125,6 @@ class PropertyListView extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       
-                      // Property Features
                       Row(
                         children: [
                           _buildFeatureChip(Icons.king_bed, '${house.bedrooms}'),

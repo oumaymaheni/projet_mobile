@@ -12,8 +12,12 @@ class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({
     Key? key,
     required this.houses,
-    required this.onToggleFavorite,
+    this.onToggleFavorite = _defaultToggleFavorite,
   }) : super(key: key);
+
+  static void _defaultToggleFavorite(House house) {
+    // Ne rien faire
+  }
 
   @override
   State<FavoritesScreen> createState() => _FavoritesScreenState();

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:provider/provider.dart';
 import '../theme/theme_provider.dart';
-import '../widgets/bottom_navigation_widget.dart'; 
+import '../widgets/bottom_navigation_widget.dart';
+
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({Key? key}) : super(key: key);
 
@@ -20,8 +21,6 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   // Navigation BottomNavBar
   void _onItemTapped(int index) {
-    
-
     setState(() {
       _selectedIndex = index;
     });
@@ -37,7 +36,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         Navigator.pushReplacementNamed(context, '/favorites');
         break;
       case 3:
-        Navigator.pushReplacementNamed(context, '/messages');
+        Navigator.pushReplacementNamed(context, '/my-ads');
         break;
       case 4:
         Navigator.pushReplacementNamed(context, '/userProfile');
@@ -48,7 +47,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   // Couleurs adaptées au thème via ThemeProvider
   Color get primaryBlue {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return themeProvider.isDarkMode ? Colors.blueAccent : const Color(0xFF2979FF);
+    return themeProvider.isDarkMode
+        ? Colors.blueAccent
+        : const Color(0xFF2979FF);
   }
 
   Color get secondaryBlue {
@@ -63,7 +64,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   Color get textGrey {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return themeProvider.isDarkMode ? Colors.grey[300]! : const Color(0xFF757575);
+    return themeProvider.isDarkMode
+        ? Colors.grey[300]!
+        : const Color(0xFF757575);
   }
 
   Color get cardColor {
@@ -73,7 +76,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   Color get shadowColor {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: true);
-    return themeProvider.isDarkMode ? Colors.black12 : Colors.black.withOpacity(0.05);
+    return themeProvider.isDarkMode
+        ? Colors.black12
+        : Colors.black.withOpacity(0.05);
   }
 
   Future<void> _changePassword() async {
@@ -134,7 +139,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         controller: controller,
         obscureText: true,
         style: TextStyle(
-          color: Provider.of<ThemeProvider>(context).isDarkMode ? Colors.white : Colors.black87,
+          color:
+              Provider.of<ThemeProvider>(context).isDarkMode
+                  ? Colors.white
+                  : Colors.black87,
           fontSize: 16,
         ),
         decoration: InputDecoration(
@@ -172,20 +180,16 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.isDarkMode;
 
-   return Scaffold(
-  backgroundColor: backgroundWhite,
+    return Scaffold(
+      backgroundColor: backgroundWhite,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset(
-              'assets/images/password.png',
-              width: 200,
-              height: 200,
-            ),
+            Image.asset('assets/images/password.png', width: 200, height: 200),
             const SizedBox(height: 24),
-            
+
             Text(
               'Modification du mot de passe',
               style: TextStyle(
@@ -198,14 +202,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             const SizedBox(height: 8),
             Text(
               'Sécurisez votre compte avec un nouveau mot de passe',
-              style: TextStyle(
-                fontSize: 16,
-                color: textGrey,
-              ),
+              style: TextStyle(fontSize: 16, color: textGrey),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            
+
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -275,29 +276,30 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           elevation: 5,
                           shadowColor: primaryBlue.withOpacity(0.5),
                         ),
-                        child: _isLoading 
-                            ? SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
+                        child:
+                            _isLoading
+                                ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                : const Text(
+                                  'Enregistrer',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              )
-                            : const Text(
-                                'Enregistrer',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            
+
             Container(
               margin: const EdgeInsets.only(top: 20),
               padding: const EdgeInsets.all(15),
@@ -328,11 +330,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           ],
         ),
       ),
-     bottomNavigationBar: HomeBottomNavigationBar(
-  currentIndex: _selectedIndex,
-  onTap: _onItemTapped,
-  primaryBlue: primaryBlue,
-),
-   );
+      bottomNavigationBar: HomeBottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        primaryBlue: primaryBlue,
+      ),
+    );
   }
 }

@@ -13,13 +13,15 @@ class AppRoutes {
   static const String home = '/home';
   static const String userProfile = '/userProfile';
   static const String postHouse = '/post-house';
+  static const String myAnnounce = '/my-ads';
+  static const String EditmyAnnounce = '/edit-house';
   static const String favorites ='/favorites';
 
 
   static final routes = <String, WidgetBuilder>{
     ...authRoutes,
     ...maisonRoutes,
-    ...userRoutes, 
+    ...userRoutes,
     ...postHouseRoutes,
     ...favoriteRoute
 

@@ -10,11 +10,9 @@ import 'theme/theme_provider.dart'; // Chemin corrigé
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const MyApp());
   setUrlStrategy(PathUrlStrategy()); // <-- Ajout important
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
 
   runApp(
     ChangeNotifierProvider(
@@ -30,15 +28,15 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Mon Application',
       theme: ThemeData.light(),
       darkTheme: ThemeData.dark(),
       themeMode: themeProvider.themeMode,
       initialRoute: AppRoutes.login,
       routes: AppRoutes.routes,
-      debugShowCheckedModeBanner: false,
     );
   }
 }
