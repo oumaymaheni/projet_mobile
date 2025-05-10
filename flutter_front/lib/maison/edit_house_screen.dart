@@ -28,10 +28,10 @@ class _EditHouseScreenState extends State<EditHouseScreen> {
   bool _isSubmitting = false;
 
   // Couleurs personnalisées
-  final Color _primaryColor = Colors.deepPurple.shade800;
+  final Color _primaryColor = const Color(0xFF2979FF);
   final Color _accentColor = Colors.orange.shade600;
   final Color _backgroundColor = Colors.grey.shade50;
-  final Color _buttonTextColor = Colors.white;   
+  final Color _buttonTextColor = Colors.grey.shade50;
   final Color _appBarIconColor = const Color.fromARGB(255, 255, 255, 255);
 
   @override
@@ -119,10 +119,12 @@ class _EditHouseScreenState extends State<EditHouseScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _backgroundColor,
+      // backgroundColor: _backgroundColor,
       appBar: AppBar(
-        title: const Text('Modifier Annonce', 
-               style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text(
+          'Modifier Annonce',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         centerTitle: true,
         elevation: 0,
         backgroundColor: _primaryColor,
@@ -140,7 +142,11 @@ class _EditHouseScreenState extends State<EditHouseScreen> {
             )
           else
             IconButton(
-              icon: Icon(Icons.save, size: 28, color: _appBarIconColor), // Icône blanche
+              icon: Icon(
+                Icons.save,
+                size: 28,
+                color: _appBarIconColor,
+              ), // Icône blanche
               onPressed: _submit,
               tooltip: 'Enregistrer les modifications',
             ),
@@ -226,7 +232,7 @@ class _EditHouseScreenState extends State<EditHouseScreen> {
                 height: 300,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
+                  // border: Border.all(color: Colors.grey.shade300),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
@@ -241,7 +247,7 @@ class _EditHouseScreenState extends State<EditHouseScreen> {
               Text(
                 'Appuyez longuement sur la carte pour définir l\'emplacement',
                 style: TextStyle(
-                  color: Colors.grey.shade600,
+                  color: const Color.fromARGB(255, 78, 77, 77),
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),
@@ -251,37 +257,38 @@ class _EditHouseScreenState extends State<EditHouseScreen> {
 
               // Bouton de soumission
               SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _submit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _primaryColor,
-            foregroundColor: _buttonTextColor, // Couleur du texte
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            elevation: 2,
-          ),
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryColor,
+                    foregroundColor: _buttonTextColor, // Couleur du texte
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
                   ),
-                )
-              : const Text(
-                  'ENREGISTRER LES MODIFICATIONS',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
-                  ),
+                  child:
+                      _isSubmitting
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                          : const Text(
+                            'ENREGISTRER LES MODIFICATIONS',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                 ),
-        ),
-      ),
+              ),
             ],
           ),
         ),
@@ -327,7 +334,7 @@ class _EditHouseScreenState extends State<EditHouseScreen> {
           borderSide: BorderSide(color: _primaryColor, width: 2),
         ),
         filled: true,
-        fillColor: Colors.white,
+        // fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(
           vertical: 16,
           horizontal: 16,

@@ -15,10 +15,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   // Theme colors
-  final Color primaryBlue = const Color(0xFF1E88E5);
-  final Color accentOrange = const Color(0xFFFF9800);
-  final Color textDark = const Color(0xFF333333);
-  final Color textLight = const Color(0xFF757575);
+   final Color primaryColor = const Color(0xFF3366FF); // Bleu plus moderne
+  final Color accentColor = const Color(0xFFFF6B6B);   // Corail pour les accents
+  final Color textPrimary = const Color(0xFF2D3436);
+  final Color textSecondary = const Color(0xFF636E72);
 
   // public method to change the tab index
   void setTabIndex(int index) {
@@ -102,15 +102,9 @@ Future<void> _fetchHouses() async {
         // Home - reste sur la même page
         break;
       case 1:
-        // Navigator.pushNamed(context, AppRoutes.search);
-        break;
-      case 2:
-        // Removed favorites navigation
-        break;
-      case 3:
         Navigator.pushNamed(context, AppRoutes.myAnnounce);
         break;
-      case 4:
+      case 2:
         Navigator.pushNamed(context, AppRoutes.userProfile);
         break;
     }
@@ -125,15 +119,17 @@ Future<void> _fetchHouses() async {
                 selectedCity: _selectedCity,
                 cities: _cities,
                 onCityChanged: _onCityChanged,
-                textDark: textDark,
+                textDark: textSecondary,
                 isFavoritesTab: false,
+                textColor: textPrimary ,
+                primaryColor: primaryColor ,
               )
               : null,
       body: _selectedIndex == 0 ? _buildHomeContent() : Container(),
       bottomNavigationBar: HomeBottomNavigationBar(
         currentIndex: _selectedIndex,
+        primaryBlue: primaryColor,
         onTap: _onBottomNavTapped,
-        primaryBlue: primaryBlue,
       ),
       floatingActionButton:
           _selectedIndex == 0 ? _buildFloatingActionButton() : null,
@@ -143,7 +139,7 @@ Future<void> _fetchHouses() async {
   Widget _buildHomeContent() {
 
     if (_isLoading) {
-      return Center(child: CircularProgressIndicator(color: primaryBlue));
+      return Center(child: CircularProgressIndicator(color: primaryColor));
     }
 
     return SingleChildScrollView(
@@ -151,16 +147,26 @@ Future<void> _fetchHouses() async {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 16),
-          const Text(
-            'Trouver la meilleure maison à louer',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 30),
+    
+                Text(
+                  'Trouvez votre',
+                  style: TextStyle(
+                    fontSize: 28,
+                    color: textPrimary,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+                Text(
+                  'Logement idéal',
+                  style: TextStyle(
+                    fontSize: 32,
+                    color: primaryColor,
+                    fontWeight: FontWeight.bold,
+                    height: 0.9,
+                  ),
+                ),
+          const SizedBox(height: 20),
 
           _filteredHouses.isEmpty
               ? Center(
@@ -168,11 +174,11 @@ Future<void> _fetchHouses() async {
                   padding: const EdgeInsets.symmetric(vertical: 30.0),
                   child: Text(
                     'No properties found',
-                    style: TextStyle(color: textLight, fontSize: 16),
+                    style: TextStyle(color: textPrimary, fontSize: 16),
                   ),
                 ),
               )
-              : PropertyListView(houses: _filteredHouses, textDark: textDark),
+              : PropertyListView(houses: _filteredHouses, textDark: textPrimary),
           const SizedBox(height: 80),
         ],
       ),
@@ -188,7 +194,7 @@ Future<void> _fetchHouses() async {
           }
         });
       },
-      backgroundColor: primaryBlue,
+      backgroundColor: primaryColor,
       child: const Icon(Icons.add, color: Color.fromARGB(255, 255, 255, 255)),
     );
   }

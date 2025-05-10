@@ -104,16 +104,6 @@ class ContactButton extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
       child: ElevatedButton(
         onPressed: () => _showContactOptions(context),
         style: ElevatedButton.styleFrom(

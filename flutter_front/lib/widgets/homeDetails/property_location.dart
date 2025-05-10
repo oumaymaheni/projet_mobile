@@ -29,7 +29,7 @@ class PropertyLocation extends StatelessWidget {
                 left: 16,
                 child: FloatingActionButton(
                   mini: true,
-                  backgroundColor: Colors.white,
+                  // backgroundColor: Colors.white,
                   child: const Icon(Icons.close, color: Colors.black),
                   onPressed: () => Navigator.of(context).pop(),
                 ),

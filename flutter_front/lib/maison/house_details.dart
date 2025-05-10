@@ -11,8 +11,14 @@ import '../widgets/homeDetails/contact_button.dart';
 
 class PropertyDetailPage extends StatefulWidget {
   final House house;
+  final bool showContactButton;
 
-  const PropertyDetailPage({Key? key, required this.house}) : super(key: key);
+  // const PropertyDetailPage({Key? key, required this.house}) : super(key: key);
+  const PropertyDetailPage({
+    Key? key,
+    required this.house,
+    this.showContactButton = true, // Valeur par défaut true
+  }) : super(key: key);
 
   @override
   State<PropertyDetailPage> createState() => _PropertyDetailPageState();
@@ -22,14 +28,14 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
   // Theme colors
   final Color primaryBlue = const Color(0xFF1E88E5);
   final Color accentOrange = const Color(0xFFFF9800);
-  final Color lightBackground = const Color.fromARGB(255, 255, 255, 255);
+  final Color lightBackground = Colors.white;
   final Color textDark = const Color(0xFF333333);
   final Color textLight = const Color(0xFF757575);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: lightBackground,
+      // backgroundColor: lightBackground,
       body: CustomScrollView(
         slivers: [
           // Custom app bar with image slider - removed favorite toggle
@@ -76,10 +82,17 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
           ),
         ],
       ),
-      bottomSheet: ContactButton(
-        primaryBlue: primaryBlue,
-        publisherId: widget.house.publisher,
-      ),
+      // bottomSheet: ContactButton(
+      //   primaryBlue: primaryBlue,
+      //   publisherId: widget.house.publisher,
+      // ),
+      bottomSheet:
+          widget.showContactButton
+              ? ContactButton(
+                primaryBlue: primaryBlue,
+                publisherId: widget.house.publisher,
+              )
+              : null,
     );
   }
 }

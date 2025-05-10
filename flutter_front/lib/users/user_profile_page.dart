@@ -220,7 +220,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ),
       ),
       bottomNavigationBar: HomeBottomNavigationBar(
-        currentIndex: 4, // Profil est à l'index 4
+        currentIndex: 2, // Profil est à l'index 4
         primaryBlue: primaryBlue,
         onTap: (int index) {
           // Navigue selon l'index sélectionné
@@ -232,12 +232,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
               Navigator.pushReplacementNamed(context, '/my-ads');
               break;
             case 2:
-              Navigator.pushReplacementNamed(context, '/favorites');
-              break;
-            case 3:
-              Navigator.pushReplacementNamed(context, '/my-ads');
-              break;
-            case 4:
               // Déjà sur la page profil, ne rien faire
               break;
           }

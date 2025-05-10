@@ -26,16 +26,16 @@ class HomeBottomNavigationBar extends StatelessWidget {
           activeIcon: Icon(Icons.home),
           label: 'Accueil',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.search),
-          activeIcon: Icon(Icons.search),
-          label: 'Rechercher',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.favorite_border),
-          activeIcon: Icon(Icons.favorite),
-          label: 'Favoris',
-        ),
+        // BottomNavigationBarItem(
+        //   icon: Icon(Icons.search),
+        //   activeIcon: Icon(Icons.search),
+        //   label: 'Rechercher',
+        // ),
+        // BottomNavigationBarItem(
+        //   icon: Icon(Icons.favorite_border),
+        //   activeIcon: Icon(Icons.favorite),
+        //   label: 'Favoris',
+        // ),
         BottomNavigationBarItem(
           icon: Icon(Icons.list_alt),
           activeIcon: Icon(Icons.list_alt),

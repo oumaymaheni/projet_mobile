@@ -6,6 +6,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Function(String?) onCityChanged;
   final Color textDark;
   final bool isFavoritesTab;
+  final Color primaryColor;  
+  final Color textColor; 
   
   const HomeAppBar({
     Key? key,
@@ -13,6 +15,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.cities,
     required this.onCityChanged,
     required this.textDark,
+    required this.primaryColor,
+    required this.textColor,
     this.isFavoritesTab = false,
   }) : super(key: key);
 
@@ -32,24 +36,10 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
         : Colors.white;
     Color accentColor = Theme.of(context).colorScheme.secondary;
 
-    // Show different app bar based on tab
-    if (isFavoritesTab) {
-      return AppBar(
-        backgroundColor: backgroundColor,
-        elevation: 0,
-        title: Text(
-          'Favoris',
-          style: TextStyle(
-            color: textColor,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-      );
-    }
 
     // Default Home tab app bar with improved filter button
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: backgroundColor,
       elevation: 2,
       shadowColor: Colors.black.withOpacity(0.1),
@@ -109,6 +99,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                     child: Text(
                       value.toString(),
                       style: TextStyle(
+                        // FIXED: Always specify text color for dropdown items
+                        color: isDarkMode ? Colors.white : Colors.black87,
                         fontWeight: value.toString() == selectedCity
                             ? FontWeight.bold
                             : FontWeight.normal,
@@ -120,91 +112,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           const Spacer(),
-         
-
         ],
       ),
-    );
-  }
-
-  // Filter bottom sheet UI
-  Widget _buildFilterSheet(BuildContext context, Color backgroundColor, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Filtres',
-                style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.close, color: textColor),
-                onPressed: () => Navigator.pop(context),
-              )
-            ],
-          ),
-
-          
-        ],
-      ),
-    );
-  }
-
-  // Helper method to build filter categories
-  Widget _buildFilterCategory(BuildContext context, String title, List<String> options) {
-    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    Color chipBgColor = isDarkMode ? Colors.grey[800]! : Colors.grey[200]!;
-    Color selectedChipColor = Theme.of(context).colorScheme.primary;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black87,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: options.map((option) {
-            bool isSelected = option == options[0]; // Just for demo
-            return FilterChip(
-              label: Text(option),
-              selected: isSelected,
-              showCheckmark: false,
-              backgroundColor: chipBgColor,
-              selectedColor: selectedChipColor.withOpacity(0.2),
-              labelStyle: TextStyle(
-                color: isSelected 
-                    ? selectedChipColor
-                    : isDarkMode ? Colors.white : Colors.black87,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              side: BorderSide(
-                color: isSelected ? selectedChipColor : Colors.transparent,
-                width: 1,
-              ),
-              onSelected: (bool selected) {
-                // Handle filter selection
-              },
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_front/maison/house_details.dart';
+import 'package:flutter_front/widgets/bottom_navigation_widget.dart';
 import '../models/maison_models.dart';
 import '../services/firebase_service.dart';
-import 'edit_house_screen.dart'; // Nouvel écran pour la modification
+import 'edit_house_screen.dart';
 
 class MyAdsPage extends StatefulWidget {
   const MyAdsPage({Key? key}) : super(key: key);
@@ -12,7 +14,7 @@ class MyAdsPage extends StatefulWidget {
 }
 
 class _MyAdsPageState extends State<MyAdsPage> {
-  final Color primaryBlue = const Color(0xFF1E88E5);
+  final Color primaryBlue = const Color(0xFF2979FF);
   List<House> _myHouses = [];
   bool _isLoading = true;
   String? _errorMessage;
@@ -50,16 +52,29 @@ class _MyAdsPageState extends State<MyAdsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mes Annonces'),
-        backgroundColor: primaryBlue,
+        // backgroundColor: primaryBlue,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadUserHouses,
-          ),
-        ],
+        automaticallyImplyLeading: false,
       ),
       body: _buildContent(),
+      bottomNavigationBar: HomeBottomNavigationBar(
+        currentIndex: 1, // Mes annonces est à l'index 3
+        primaryBlue: primaryBlue,
+        onTap: (int index) {
+          // Navigue selon l'index sélectionné
+          switch (index) {
+            case 0:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
+            case 1:
+              // Déjà sur la page mes annonces, ne rien faire
+              break;
+            case 2:
+              Navigator.pushReplacementNamed(context, '/userProfile');
+              break;
+          }
+        },
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed:
             () => Navigator.pushNamed(
@@ -124,19 +139,16 @@ class _MyAdsPageState extends State<MyAdsPage> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadUserHouses,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: _myHouses.length,
-        itemBuilder:
-            (context, index) => _HouseCard(
-              house: _myHouses[index],
-              onDelete: _deleteHouse,
-              onEdit: _editHouse,
-              primaryColor: primaryBlue,
-            ),
-      ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _myHouses.length,
+      itemBuilder:
+          (context, index) => _HouseCard(
+            house: _myHouses[index],
+            onDelete: _deleteHouse,
+            onEdit: _editHouse,
+            primaryColor: primaryBlue,
+          ),
     );
   }
 
@@ -224,7 +236,7 @@ class _HouseCard extends StatelessWidget {
             child: Container(
               height: 180,
               width: double.infinity,
-              color: Colors.grey.shade200,
+              color: const Color.fromRGBO(238, 238, 238, 1),
               child:
                   house.imageUrls.isNotEmpty
                       ? Image.network(
@@ -303,7 +315,17 @@ class _HouseCard extends StatelessWidget {
                       onDelete(house.id);
                     }),
                     _buildActionButton(Icons.visibility, 'Détails', () {
-                      // TODO: Implémenter la vue détaillée
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => PropertyDetailPage(
+                                house: house,
+                                showContactButton:
+                                    false, // Désactive le bouton contact
+                              ),
+                        ),
+                      );
                     }),
                   ],
                 ),
