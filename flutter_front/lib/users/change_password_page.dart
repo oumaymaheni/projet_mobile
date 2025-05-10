@@ -30,10 +30,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         Navigator.pushReplacementNamed(context, '/home');
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/search');
+        Navigator.pushReplacementNamed(context, '/my-ads');
         break;
       case 2:
-        Navigator.pushReplacementNamed(context, '/favorites');
+        Navigator.pushReplacementNamed(context, '/userProfile');
         break;
       case 3:
         Navigator.pushReplacementNamed(context, '/my-ads');

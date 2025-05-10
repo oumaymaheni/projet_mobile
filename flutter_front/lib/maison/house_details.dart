@@ -22,15 +22,9 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
   // Theme colors
   final Color primaryBlue = const Color(0xFF1E88E5);
   final Color accentOrange = const Color(0xFFFF9800);
-  final Color lightBackground = const Color(0xFFF5F7FA);
+  final Color lightBackground = const Color.fromARGB(255, 255, 255, 255);
   final Color textDark = const Color(0xFF333333);
   final Color textLight = const Color(0xFF757575);
-
-  void _toggleFavorite() {
-    setState(() {
-      widget.house.isFavorite = !widget.house.isFavorite;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,10 +32,9 @@ class _PropertyDetailPageState extends State<PropertyDetailPage> {
       backgroundColor: lightBackground,
       body: CustomScrollView(
         slivers: [
-          // Custom app bar with image slider
+          // Custom app bar with image slider - removed favorite toggle
           PropertyImageSliderBar(
             house: widget.house,
-            onFavoriteToggle: _toggleFavorite,
           ),
 
           // Content

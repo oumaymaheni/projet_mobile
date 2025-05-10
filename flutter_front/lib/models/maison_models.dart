@@ -52,7 +52,7 @@ class House {
 
 });
 
-
+ // Convert House object to Map for storing in Firestore
   factory House.fromMap(String id, Map<String, dynamic> data) {
     return House(
       id: id,
@@ -102,8 +102,6 @@ class House {
       'createdAt': Timestamp.fromDate(createdAt),
       'publisher': publisher,
       'propertyType': propertyType,
-
-      // Nouveaux champs
       'description': description,
     };
   }

@@ -3,12 +3,10 @@ import '../../models/maison_models.dart';
 
 class PropertyImageSliderBar extends StatefulWidget {
   final House house;
-  final VoidCallback onFavoriteToggle;
 
   const PropertyImageSliderBar({
     Key? key,
     required this.house,
-    required this.onFavoriteToggle,
   }) : super(key: key);
 
   @override
@@ -42,23 +40,7 @@ class _PropertyImageSliderBarState extends State<PropertyImageSliderBar> {
         ),
         onPressed: () => Navigator.pop(context),
       ),
-      actions: [
-        IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              widget.house.isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: widget.house.isFavorite ? Colors.red : Colors.black,
-            ),
-          ),
-          onPressed: widget.onFavoriteToggle,
-        ),
-        const SizedBox(width: 8),
-      ],
+      // Removed favorite button from actions
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
           children: [

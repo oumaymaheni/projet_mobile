@@ -23,7 +23,7 @@ class AppRoutes {
     ...maisonRoutes,
     ...userRoutes,
     ...postHouseRoutes,
-    ...favoriteRoute
+    // ...favoriteRoute
 
   };
 }

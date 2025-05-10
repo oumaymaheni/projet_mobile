@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/maison_models.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 class FirebaseService {
   static final _houseRef = FirebaseFirestore.instance.collection('house_ads');
+  static final _favoritesRef = FirebaseFirestore.instance.collection(
+    'user_favorites',
+  );
 
   /// 🔼 Ajouter une maison
   static Future<void> addHouse(House house) async {
@@ -13,8 +15,11 @@ class FirebaseService {
 
   /// 🔽 Récupérer toutes les maisons
   static Future<List<House>> getHouses() async {
-    final snapshot = await _houseRef.orderBy('createdAt', descending: true).get();
-    return snapshot.docs.map((doc) => House.fromMap(doc.id, doc.data())).toList();
+    final snapshot =
+        await _houseRef.orderBy('createdAt', descending: true).get();
+    return snapshot.docs
+        .map((doc) => House.fromMap(doc.id, doc.data()))
+        .toList();
   }
 
   /// 🔍 Récupérer une maison par ID
@@ -31,11 +36,16 @@ class FirebaseService {
 
   static Future<List<House>> getHousesByPublisher(String publisherId) async {
     try {
-      final query = await _houseRef
-          .where('publisher', isEqualTo: publisherId)
-          .orderBy('createdAt', descending: true)
-          .get();
-      return query.docs.map((doc) => House.fromMap(doc.id, doc.data() as Map<String, dynamic>)).toList();
+      final query =
+          await _houseRef
+              .where('publisher', isEqualTo: publisherId)
+              .orderBy('createdAt', descending: true)
+              .get();
+      return query.docs
+          .map(
+            (doc) => House.fromMap(doc.id, doc.data() as Map<String, dynamic>),
+          )
+          .toList();
     } catch (e) {
       throw 'Erreur de requête: $e';
     }
@@ -48,20 +58,54 @@ class FirebaseService {
       if (user == null) throw 'Utilisateur non connecté';
 
       // Requête avec index
-      final query = await _houseRef
-          .where('publisher', isEqualTo: user.uid)
-          .orderBy('createdAt', descending: true)
-          .get();
+      final query =
+          await _houseRef
+              .where('publisher', isEqualTo: user.uid)
+              .orderBy('createdAt', descending: true)
+              .get();
 
       return query.docs
-          .map((doc) => House.fromMap(doc.id, doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) => House.fromMap(doc.id, doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       throw 'Erreur de chargement: $e';
     }
   }
 
-  static Future<void> updateHouse(String houseId, Map<String, dynamic> updates) async {
+  static Future<void> updateHouse(
+    String houseId,
+    Map<String, dynamic> updates,
+  ) async {
     await _houseRef.doc(houseId).update(updates);
   }
+
+  static Future<List<House>> getOtherUsersHouses() async {
+  try {
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+    
+    if (currentUser == null) {
+      // Si l'utilisateur n'est pas connecté, renvoyer toutes les maisons
+      return getHouses();
+    }
+    
+    // Requête pour exclure les maisons de l'utilisateur actuel
+    final snapshot = await _houseRef
+        .where('publisher', isNotEqualTo: currentUser.uid)
+        .orderBy('publisher')
+        .orderBy('createdAt', descending: true)
+        .get();
+        
+    return snapshot.docs
+        .map((doc) => House.fromMap(doc.id, doc.data()))
+        .toList();
+  } catch (e) {
+    throw 'Erreur lors de la récupération des maisons: $e';
+  }
 }
+
+
+}
+
+

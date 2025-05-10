@@ -229,7 +229,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               Navigator.pushReplacementNamed(context, '/home');
               break;
             case 1:
-              Navigator.pushReplacementNamed(context, '/search');
+              Navigator.pushReplacementNamed(context, '/my-ads');
               break;
             case 2:
               Navigator.pushReplacementNamed(context, '/favorites');

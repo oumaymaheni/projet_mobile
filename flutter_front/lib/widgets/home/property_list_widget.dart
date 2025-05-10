@@ -4,19 +4,23 @@ import '../../maison/house_details.dart';
 
 class PropertyListView extends StatelessWidget {
   final List<House> houses;
-  final Function(House)? onToggleFavorite;
   final Color textDark;
 
   const PropertyListView({
     Key? key,
     required this.houses,
-    this.onToggleFavorite ,
     required this.textDark,
   }) : super(key: key);
 
   @override
-    @override
   Widget build(BuildContext context) {
+    bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+    // Dark mode colors
+    Color backgroundColor = isDarkMode ? const Color.fromARGB(255, 46, 46, 46) : Colors.grey[50]!;
+    Color textColor = isDarkMode ? Colors.white : const Color.fromARGB(255, 6, 6, 6);
+    Color iconColor = isDarkMode ? Colors.white70 : Colors.grey[500]!;
+
     if (houses.isEmpty) {
       return Center(
         child: Padding(
@@ -24,7 +28,7 @@ class PropertyListView extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
-              Icon(Icons.home_work_outlined, size: 64, color: Colors.grey),
+              Icon(Icons.home_work_outlined, size: 64, color: Color.fromARGB(255, 62, 60, 219)),
               SizedBox(height: 16),
               Text(
                 'No properties found',
@@ -54,6 +58,7 @@ class PropertyListView extends StatelessWidget {
         final house = houses[index];
         return GestureDetector(
           onTap: () {
+            // Navigate to the detail page when card is tapped
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -61,77 +66,92 @@ class PropertyListView extends StatelessWidget {
               ),
             );
           },
-          child: Card(
+          child: Container(
             margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 2,
+                  offset: const Offset(0, 1),
+                ),
+              ],
             ),
-            elevation: 2,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: _buildPropertyImage(house),
-                    ),
-                    if (onToggleFavorite != null) // Affiche le bouton seulement si la fonction existe
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: InkWell(
-                        onTap: () => onToggleFavorite!(house), // Utilisation de ! car on a vérifié non null
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Icon(
-                            house.isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: house.isFavorite ? Colors.red : Colors.grey,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                // Property Image
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                  child: _buildPropertyImage(house),
                 ),
-                
+
+                // Property Details
                 Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Title
                       Text(
-                        '${house.price.toStringAsFixed(0)} Dt/Mois',
+                        house.title,
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: textDark,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      
-                      Text(
-                        '${house.title}, ${house.address}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 8),
-                      
+                      const SizedBox(height: 2),
+
+                      // Address
                       Row(
                         children: [
-                          _buildFeatureChip(Icons.king_bed, '${house.bedrooms}'),
-                          const SizedBox(width: 12),
-                          _buildFeatureChip(Icons.bathtub, '${house.bathrooms}'),
-                          const SizedBox(width: 12),
-                          _buildFeatureChip(Icons.square_foot, '${house.surface} ft²'),
+                          Icon(Icons.location_on, size: 14, color: iconColor),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              house.address,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Features and Price
+                      Row(
+                        children: [
+                          // Features
+                          Expanded(
+                            child: Row(
+                              children: [
+                                _buildFeatureChip(Icons.directions_car, '${house.bedrooms}'),
+                                const SizedBox(width: 10),
+                                _buildFeatureChip(Icons.bed, '${house.bathrooms}'),
+                                const SizedBox(width: 10),
+                                _buildFeatureChip(Icons.square_foot, '${house.surface} m²'),
+                              ],
+                            ),
+                          ),
+
+                          // Price
+                          Text(
+                            '${house.price.toStringAsFixed(0)} DT',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -145,28 +165,26 @@ class PropertyListView extends StatelessWidget {
     );
   }
 
-  // New method to safely handle image display
+  // Handle image display
   Widget _buildPropertyImage(House house) {
-    // Check if imageUrls is null or empty
     if (house.imageUrls == null || house.imageUrls.isEmpty) {
       return Container(
-        height: 180,
+        height: 150,
         color: Colors.grey[300],
         child: const Center(
           child: Icon(Icons.home, size: 50, color: Colors.white),
         ),
       );
     }
-    
-    // If we have image URLs, use the first one
+
     return Image.network(
       house.imageUrls[0],
-      height: 180,
+      height: 150,
       width: double.infinity,
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) {
         return Container(
-          height: 180,
+          height: 150,
           color: Colors.grey[300],
           child: const Center(
             child: Icon(Icons.error, color: Colors.white),
@@ -176,7 +194,7 @@ class PropertyListView extends StatelessWidget {
       loadingBuilder: (context, child, loadingProgress) {
         if (loadingProgress == null) return child;
         return Container(
-          height: 180,
+          height: 150,
           color: Colors.grey[200],
           child: const Center(
             child: CircularProgressIndicator(),
@@ -188,13 +206,14 @@ class PropertyListView extends StatelessWidget {
 
   Widget _buildFeatureChip(IconData icon, String text) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 4),
+        Icon(icon, size: 14, color: const Color.fromARGB(255, 72, 56, 222)),
+        const SizedBox(width: 2),
         Text(
           text,
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             color: Colors.grey[600],
           ),
         ),
