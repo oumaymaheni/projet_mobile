@@ -21,7 +21,7 @@ class PropertyHeaderInfo extends StatelessWidget {
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF333333),
+            // color: Color(0xFF333333),
           ),
         ),
         const SizedBox(height: 4),
